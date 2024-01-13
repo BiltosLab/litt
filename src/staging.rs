@@ -25,8 +25,9 @@ pub fn add() { //template for add func
 
 }
 
-
-pub fn scanfile(realpath:&str,ignore:&Vec<String>) -> Vec<String> {
+// realpath = Obviously the real path for example "./" , ignore Vector has the names of the files we wanna ignore gonna do something above
+// to parse a file called .littignore (I know XD)
+pub fn scanfile(realpath:&str,ignore:&Vec<String>) -> Vec<String> { 
     let mut filelist:Vec<String> = Vec::new();
     if let Ok(dirf) = fs::read_dir(realpath)
     {
@@ -60,7 +61,7 @@ fn computehash(file: &str) -> String { // Need to change this to return result i
     let mut file = File::open(file).unwrap();
 
     // Create a SHA-256 "hasher"
-    let mut hasher = Sha256::new();
+    let mut hasher = Sha256::new(); // Rust analyzer thinks this's an error or something just ignore.
 
     // Read the file in 4KB chunks and feed them to the hasher
     let mut buffer = [0; 4096];
@@ -76,3 +77,15 @@ fn computehash(file: &str) -> String { // Need to change this to return result i
     let result = format!("{:x}", hasher.finalize());
     return result;
 }
+
+/*
+while let Ok(bytes_read) = file.read(&mut buffer) {
+        if bytes_read == 0 {
+            break;
+        }
+        hasher.update(&buffer[..bytes_read]);
+    } 
+    // another implementation for that loop i feel this is better
+    // but w.e we can take care of it later current loop causes no trouble till we deal with the
+    // unwrap stuff.
+    */

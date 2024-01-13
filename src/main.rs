@@ -1,6 +1,8 @@
 use std::{fs,env, process::exit};
 mod littinit;
 mod staging;
+mod fileparser;
+
 fn main() {
     let args:Vec<String> = env::args().collect();
     if args.len() < 2 {exit(1)}

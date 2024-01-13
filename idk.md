@@ -2,7 +2,7 @@
 1. first what the app should do is parse the dir/files (leaving the main .litt dir and any other hidden files aka starts with ".")
 2. push the files we got to a list
 3. init a database of some sort idk
-4. SHA-1 all of the files we will import  
+4. SHA-256 all of the files we will import  
 5. compare the files we got to the database one if we have a new file or anything make sure to take note
 6. start opening the files in that list one by one and parsing them and adding the diffs when staging? idk
 7. the database file should be able to reconstruct a file even if original files are corrupted/damaged or even deleted.
@@ -20,4 +20,8 @@
 5. add remote support (idk how but we will see)
 6. add cloning support
 7. .littignore file to ignore certain stuff 
-8. 
+
+## TODO functionwise
+1. Add() hash everyfile into a listfile and then hash that file and store it somewhere other than the main folder.
+2. if for whatever reason the listfile was corrupted stop working and send error to the user (Files have been tampered with.)
+3. BIG TODO IS THE UNWRAPs in all the code , need to handle errors better .
