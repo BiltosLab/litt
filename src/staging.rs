@@ -1,5 +1,5 @@
-use std::{fs,fs::DirBuilder,fs::File,io::Write};
-
+use std::{fs,fs::DirBuilder,fs::File,io::Write,io::Read};
+use sha2::{Sha256, Digest};
 
 
 
@@ -11,6 +11,8 @@ pub fn add() { //template for add func
     for l in list{
         println!("{}",l);
         f.write_all(l.as_bytes()).unwrap();
+        f.write_all(b"\t").unwrap();
+        f.write_all(computehash(&l).as_bytes()).unwrap();
         f.write_all(b"\n").unwrap();
     }
     
@@ -48,3 +50,24 @@ pub fn scanfile(realpath:&str) -> Vec<String> {
 
 
 
+fn computehash(file: &str) -> String { // Need to change this to return result instead but its fine for testing i guess
+    // Open the file
+    let mut file = File::open(file).unwrap();
+
+    // Create a SHA-256 "hasher"
+    let mut hasher = Sha256::new();
+
+    // Read the file in 4KB chunks and feed them to the hasher
+    let mut buffer = [0; 4096];
+    loop {
+        let bytes_read = file.read(&mut buffer).unwrap();
+        if bytes_read == 0 {
+            break;
+        }
+        hasher.update(&buffer[..bytes_read]);
+    }
+
+    // Finalize the hash and get the result as a byte array
+    let result = format!("{:x}", hasher.finalize());
+    return result;
+}
