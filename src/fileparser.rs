@@ -1,8 +1,21 @@
-use std::{fs::File,io::Write,io::Read};
+use std::{fs::File,io::{BufRead, self},io::Read};
 
 
-fn parsefile(filetoparse:&str){
+pub fn filetostring(filetoparse:&str) -> Vec<String>{
     let mut f = File::open(filetoparse).unwrap();
-    f.read_to_string(buf)
+    let mut tokens:Vec<String> = vec![];
+    let mut reader = io::BufReader::new(f);
 
+    for line in reader.lines(){
+        let line = line.unwrap();
+        tokens.push(line.to_string());
+    }
+    return tokens;
 }
+
+
+
+
+
+
+

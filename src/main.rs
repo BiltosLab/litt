@@ -1,4 +1,6 @@
 use std::{fs,env, process::exit};
+
+use crate::fileparser::filetostring;
 mod littinit;
 mod staging;
 mod fileparser;
@@ -23,6 +25,12 @@ fn main() {
 
 
 fn commit() { //template for commit func
+    let exam:Vec<String> = filetostring("./src/main.rs");
+
+    for line in exam{
+        println!("{}",line);
+    } 
+
     println!("Committed changes.");
 }
 
