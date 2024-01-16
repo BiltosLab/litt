@@ -7,7 +7,7 @@
 6. start opening the files in that list one by one and parsing them and adding the diffs when staging? idk
 7. the database file should be able to reconstruct a file even if original files are corrupted/damaged or even deleted.
 8. if we have diffs we are able to commit the changes to the database aka add the diffs to the database file/s.
-9. these are geniunely just brainstorming / shit storming ideas/steps but im here to learn babybyy so idc
+9. these are geniunely just brainstorming / shit storming ideas/steps but im here to learn babybyy so idc 
     
 
 
