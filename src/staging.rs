@@ -73,6 +73,7 @@ fn computehash(file: &str) -> String { // Need to change this to return result i
         hasher.update(&buffer[..bytes_read]);
     }
 
+    
     // Finalize the hash and get the result as a byte array
     let result = format!("{:x}", hasher.finalize());
     return result;
