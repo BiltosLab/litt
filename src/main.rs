@@ -1,10 +1,5 @@
 use std::{fs,env, process::exit};
 use colored::*;
-<<<<<<< HEAD
-=======
-use differ::Differ;
->>>>>>> 5681678df4983228bcbee7c1230f127b14310c15
-
 use crate::fileparser::filetostring;
 mod littinit;
 mod staging;
