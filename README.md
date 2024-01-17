@@ -6,6 +6,7 @@ Litt is a git clone attempt, this project's main goal is to be educational to le
 2. Staging area (User can add the changes to be added to the next commit)
 3. Commit the changes
 4. View commit history (Details of each commit)
+5. Be able to host a repo and also clone from it 
 
 
 # Steps to achieving the goals

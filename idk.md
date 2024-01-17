@@ -20,6 +20,7 @@
 5. add remote support (idk how but we will see)
 6. add cloning support
 7. .littignore file to ignore certain stuff 
+8. 
 
 ## TODO functionwise
 1. Add() hash everyfile into a listfile and then hash that file and store it somewhere other than the main folder.
