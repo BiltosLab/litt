@@ -11,5 +11,3 @@ Litt is a git clone attempt, this project's main goal is to be educational to le
 
 # Steps to achieving the goals
 Parse files and compare to original state to determine what the differences are.
-
-

@@ -28,5 +28,3 @@ pub fn find_diff_lines(file1: Vec<String>, file2: Vec<String>) -> Vec<String> {
 }
 
 
-
-
