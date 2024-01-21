@@ -1,9 +1,10 @@
 use std::{fs,fs::DirBuilder,fs::File,io::Write};
 
+use crate::filestuff::*;
 
 pub fn init() { // TODO! : Implement an init func aka create files and dirs and setup something idk
-    let filestruct = ["./.litt/objects","./.litt/logs","./.litt/ref","./.litt/ref/heads","./.litt/ref/remotes"]; // we can add whatever folders we need to create at init time.
-    let files = ["./.litt/config.txt","./.litt/commit_history","./.litt/commits","./.litt/trackedfilelist","./.litt/objects/stager"];
+    let filestruct = ["./.litt","./.litt/branches","./.litt/hooks","./.litt/info","./.litt/refs","./.litt/refs/heads","./.litt/refs/tags","./.litt/objects","./.litt/objects/pack","./.litt/objects/info",]; // we can add whatever folders we need to create at init time.
+    let files = ["./.litt/info/exclude","./.litt/description","./.litt/HEAD"];
     println!("Init");
     let path = "./.litt";
     mkdir(path);
@@ -18,16 +19,3 @@ pub fn init() { // TODO! : Implement an init func aka create files and dirs and 
 
 
 
-pub fn mkdir(path:&str) { 
-    DirBuilder::new()
-    .recursive(true)
-    .create(path).unwrap();
-    assert!(fs::metadata(path).unwrap().is_dir());
-    
-}
-
-pub fn touch(path:&str) {
-let mut f = File::create(path).unwrap();
-assert!(fs::metadata(path).unwrap().is_file());
-
-}

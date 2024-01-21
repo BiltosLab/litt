@@ -1,7 +1,7 @@
 use std::{fs::{File, self},io::{BufRead, self, Write},io::Read};
 
-use crate::fileparser::{filetostring, stringtofile, appendstr_to_file};
-use crate::staging::{add,scanfile,scanfile_andignore,computehash};
+use crate::filestuff::{filetostring, stringtofile, appendstr_to_file, scanfiles_andignore,computehash};
+use crate::staging::{add};
 
 pub fn commit() {
     //template for commit func
@@ -26,11 +26,12 @@ pub fn diff_loader(){
     ignorelist.push(".litt".to_string());
     ignorelist.push(".git".to_string());
     ignorelist.push("target".to_string());
-    let trackedfilelist:Vec<String> = scanfile_andignore(".", &ignorelist);
+    let trackedfilelist:Vec<String> = scanfiles_andignore(".", &ignorelist);
     
     for file in trackedfilelist{
-        appendstr_to_file(&commitfile, format!("{} {}\n",file,computehash(&file))).unwrap();
-
+        if let Err(err) = appendstr_to_file(&commitfile,format!("{}\t{}",file,computehash(&file).unwrap())) {
+            eprintln!("Error {}",err)
+        }
     }
 }
 
@@ -41,3 +42,4 @@ appendstr_to_file(&commitfile, "DOGGIE".to_string()).unwrap();
         eprintln!("Error writing to file {}",err);
     }
 */
+
