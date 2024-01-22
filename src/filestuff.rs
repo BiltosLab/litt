@@ -1,9 +1,13 @@
 /*
     This file contains all the functions that do operations of files 
 */
-use std::{fs,fs::{File, OpenOptions, DirBuilder},io::{Write,BufRead, self, BufReader},io::Read};
+use std::{fs,fs::{File, OpenOptions, DirBuilder},io::{Write,BufRead, self, BufReader, BufWriter},io::Read};
 use sha2::{Sha256,Digest};
 use std::borrow::BorrowMut;
+use flate2::Compression;
+use flate2::write::DeflateEncoder;
+use flate2::read::DeflateDecoder;
+
 
 pub fn filetostring(filetoparse:&str) -> Result<Vec<String>, io::Error>{ // Function to Parse files line by line into a Vec<String>
     let mut f = File::open(filetoparse)?;
@@ -175,6 +179,19 @@ pub fn computehash(file: &str) -> Result<String, io::Error> { // Need to change 
         }
         hasher.update(&buffer[..bytes_read]);
     }
+/*
+while let Ok(bytes_read) = file.read(&mut buffer) {
+        if bytes_read == 0 {
+            break;
+        }
+        hasher.update(&buffer[..bytes_read]);
+    } 
+    // another implementation for that loop i feel this is better
+    // but w.e we can take care of it later current loop causes no trouble till we deal with the
+    // unwrap stuff.
+    */
+
+
 
     
     // Finalize the hash and get the result as a byte array
@@ -207,3 +224,25 @@ assert!(fs::metadata(path).unwrap().is_file());
 
 }
 
+
+pub fn decompressfile(inputfile:&str,outputfile:&str) -> std::io::Result<()>{
+    let input_file = File::open(inputfile)?;
+    let output_file = File::create(outputfile)?;
+    let mut reader = BufReader::new(input_file);
+    let mut writer = BufWriter::new(output_file);
+    let mut decoder = DeflateDecoder::new(&mut reader);
+    std::io::copy(&mut decoder, &mut writer)?;
+    Ok(())
+}
+
+
+pub fn compressfile(inputfile:&str,outputfile:&str) -> std::io::Result<()> {
+    let input_file = File::open(inputfile)?;
+    let output_file = File::create(outputfile)?;
+    let mut reader = BufReader::new(input_file);
+    let mut writer = BufWriter::new(output_file);
+    let mut encoder = DeflateEncoder::new(&mut writer, Compression::default());
+    std::io::copy(&mut reader, &mut encoder)?;
+    encoder.finish()?;
+    Ok(())
+}
