@@ -12,7 +12,7 @@ fn main() -> Result<(), io::Error> {
     let cmd = &args[1];
     match cmd.as_str() {
         "init" => littinit::init(),
-        "add" => staging::add(),
+        "add" => staging::add(&args[2]),
         "commit" => commits::commit(),
         "status" => status()?,
         "log" => log(),
@@ -33,8 +33,9 @@ fn status() ->Result<(), io::Error>  { //template for status func
     //println!("Formatted Diff:\n{:?}", diff_lines);
     println!("Modified Lines Test:\n{}", linediff.join("\n"));
     /*Seems like t he diff function works as expected now the TODO HERE IS implement a database file and diff between it 
-    and the source files that are supposed to be in the repo */
+    and the source files that are supposed to be in the repo  io*/
     Ok(())
+    
 }
 
 fn log() {  //template for log func

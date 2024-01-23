@@ -21,6 +21,10 @@ pub fn filetostring(filetoparse:&str) -> Result<Vec<String>, io::Error>{ // Func
     Ok(tokens)
 }
 
+pub fn littignore() -> Result<Vec<String>, io::Error> {
+    let file = filetostring("./.littignore")?;
+    Ok(file)
+}
 
 pub fn stringtofile(filepath:&str,content:Vec<String>) -> Result<(), std::io::Error> { // this one will truncate or overwrite the entire file 
     let content = content.join("\n");
@@ -76,16 +80,18 @@ pub fn search_and_destroy(file_path: &str, string_to_delete: &str) -> Result<(),
     Ok(())
 }
 
-pub fn scanfiles_andignore(realpath:&str,ignore:&Vec<String>) -> Vec<String> { 
+pub fn scanfiles_andignore(realpath:&str) -> Vec<String> { 
+    let ignore = littignore().unwrap();
     let mut filelist:Vec<String> = Vec::new();
     if let Ok(dirf) = fs::read_dir(realpath)
     {
         for path in dirf{
             if let Ok(path) = path {
                 if let Ok(metta) = path.metadata(){ 
+                    if ignore.contains(&path.path().to_str().unwrap().to_string()) {continue;}
                     if metta.is_dir(){
-                        if ignore.contains(path.file_name().to_string_lossy().to_string().borrow_mut()) {continue;}
-                        filelist.extend(scanfiles_andignore(&path.path().to_string_lossy(),ignore));
+                        //if ignore.contains(path.file_name().to_string_lossy().to_string().borrow_mut()) {continue;}
+                        filelist.extend(scanfiles_andignore(&path.path().to_string_lossy()));
                     }
                     else if metta.is_file() {
                         //println!("{:?}",path.path().to_str().unwrap());
