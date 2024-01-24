@@ -1,5 +1,5 @@
 # What is Litt
-Litt is an attempt to create something similar to git<br>i wanted a name similar to git and i couldnt waste time on a name so i replaced g with the first letter of my name and added a t and the end.<br>
+Litt is an attempt to create something similar to git<br>i wanted a name similar to git and i couldnt waste time on a name so i replaced g with the first letter of my name and added a second t at the end.<br>
 "Litt" can mean anything depending on your mood.
 
 This project aims to produce a working VCS "Version Control System" that actually works and it aims to be small and simple enough so anyone can read the code and understand how a VCS works while also being educational.
