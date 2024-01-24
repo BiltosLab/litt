@@ -1,6 +1,7 @@
 use std::{fs,fs::DirBuilder,fs::File,io::{Write, self},io::Read, borrow::{Borrow, BorrowMut}};
+use colored::Colorize;
 use sha2::{Sha256, Digest};
-use crate::{filestuff::{filetostring, appendstr_to_file, search_and_destroy,scanfiles_andignore,create_object,compressfile,decompressfile, computehash, littignore}, diff::find_diff_lines};
+use crate::{filestuff::{filetostring, appendstr_to_file, search_and_destroy,scanfiles_andignore,create_object,compressfile,decompressfile, computehash, littignore}, diff::find_diff_lines, scanobjects};
 
 
 
@@ -47,9 +48,10 @@ pub fn blob(filename:&str){
 }
 
 
-pub fn catf(hashoffile:&str){
-    let a = "./THEFILE2.rs";
-    decompressfile(&hashoffile, &a).unwrap();
-    let b = filetostring(&a).unwrap();
-    println!("{}",b.join("\n"));
+pub fn catfile(hashoffile:&str){
+    let obj=scanobjects(hashoffile);
+    println!("{}",obj);
+    decompressfile(&obj, "./.litt/tempf").unwrap();
+    println!("{}",filetostring("./.litt/tempf").unwrap().join("\n").blue());
+
 }

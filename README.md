@@ -13,6 +13,7 @@ This project aims to produce a working VCS "Version Control System" that actuall
 6. Display diffs between current files and last commit
 7. Stay under a certain number of LOC (less lines means less bugs and it becomes easier to understand due to simplicity) Number TBD.
 8. Ability to migrate a repo from git to litt or vice versa (Either litt itself will have a function to do that or i'll write a bash script for it idk)
+9. Branching/tags and merging branches.
 
 
 # TODO:

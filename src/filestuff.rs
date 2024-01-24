@@ -2,6 +2,7 @@
     This file contains all the functions that do operations of files 
 */
 use std::{fs,fs::{File, OpenOptions, DirBuilder},io::{Write,BufRead, self, BufReader, BufWriter},io::Read};
+use colored::Colorize;
 use sha2::{Sha256,Digest};
 use std::borrow::BorrowMut;
 use flate2::Compression;
@@ -109,19 +110,21 @@ pub fn scanfiles_andignore(realpath:&str) -> Vec<String> {
     return filelist;
 }
 
-pub fn scanfiles(realpath:&str) -> Vec<String> { 
-    let mut filelist:Vec<String> = Vec::new();
-    if let Ok(dirf) = fs::read_dir(realpath)
+pub fn scanobjects(hash:&str) -> String { 
+    if let Ok(dirf) = fs::read_dir("./.litt/objects")
     {
         for path in dirf{
             if let Ok(path) = path {
                 if let Ok(metta) = path.metadata(){ 
                     if metta.is_dir(){
-                        filelist.extend(scanfiles(&path.path().to_string_lossy()));
+                        //if ignore.contains(path.file_name().to_string_lossy().to_string().borrow_mut()) {continue;}
+                        continue;
                     }
                     else if metta.is_file() {
                         //println!("{:?}",path.path().to_str().unwrap());
-                        filelist.push(path.path().to_str().unwrap().to_string());
+                            if  path.file_name().to_str().unwrap().to_string().contains(hash){
+                                return path.path().to_str().unwrap().to_string();
+                            }
                         //println!("{:?}",path.path().to_str().unwrap());
                     }
                 }
@@ -132,8 +135,9 @@ pub fn scanfiles(realpath:&str) -> Vec<String> {
     }
 
 
-    return filelist;
+    return "no".to_string();
 }
+
 
 /*
 Tbh we will need a config file for this application which will be stored in .config i suppose
@@ -196,8 +200,6 @@ while let Ok(bytes_read) = file.read(&mut buffer) {
     // but w.e we can take care of it later current loop causes no trouble till we deal with the
     // unwrap stuff.
     */
-
-
 
     
     // Finalize the hash and get the result as a byte array

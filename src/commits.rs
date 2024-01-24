@@ -1,3 +1,8 @@
+/*
+ * LITT - Version Control System
+ *
+ * Copyright (C) Laith Bilto, 2024
+ */
 use std::{fs::{File, self},io::{BufRead, self, Write},io::Read};
 
 use crate::filestuff::{filetostring, stringtofile, appendstr_to_file, scanfiles_andignore,computehash, littignore};
