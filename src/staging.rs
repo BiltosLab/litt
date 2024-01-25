@@ -11,7 +11,7 @@ pub fn add(addargs:&str) { //template for add func
 
     match addargs {
         "." => for file in scanfiles_andignore(".") {
-                //blob(&file);
+                blob(&file);
                 println!("File compressed {} :",file);
         }
         _ => println!("Error"),

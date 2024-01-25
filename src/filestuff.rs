@@ -82,7 +82,7 @@ pub fn search_and_destroy(file_path: &str, string_to_delete: &str) -> Result<(),
 }
 
 pub fn scanfiles_andignore(realpath:&str) -> Vec<String> { 
-    let ignore = littignore().unwrap();
+    let ignore = littignore().unwrap().join("\n");
     let mut filelist:Vec<String> = Vec::new();
     if let Ok(dirf) = fs::read_dir(realpath)
     {
