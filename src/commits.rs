@@ -24,7 +24,7 @@ pub fn commit() {
 }
 
 
-pub fn diff_loader(){
+pub fn diff_loader(){ // .littignore needed.
     let commitfile= "./.litt/commit_history";
     let mut buffer:Vec<String> = Vec::new();
     let mut ignorelist:Vec<String> = Vec::new();
