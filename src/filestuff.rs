@@ -8,7 +8,7 @@ use std::borrow::BorrowMut;
 use flate2::Compression;
 use flate2::write::DeflateEncoder;
 use flate2::read::DeflateDecoder;
-
+use std::collections::HashSet;
 
 pub fn filetostring(filetoparse:&str) -> Result<Vec<String>, io::Error>{ // Function to Parse files line by line into a Vec<String>
     let mut f = File::open(filetoparse)?;
@@ -22,9 +22,15 @@ pub fn filetostring(filetoparse:&str) -> Result<Vec<String>, io::Error>{ // Func
     Ok(tokens)
 }
 
-pub fn littignore() -> Result<Vec<String>, io::Error> {
+/*pub fn littignore() -> Result<Vec<String>, io::Error> {
     let file = filetostring("./.littignore")?;
     Ok(file)
+}*/
+
+pub fn littignore() -> Result<HashSet<String>, io::Error> {
+    let file = filetostring("./.littignore")?;
+    let hashset_of_strings: HashSet<_> = file.into_iter().collect();
+    Ok(hashset_of_strings)
 }
 
 pub fn stringtofile(filepath:&str,content:Vec<String>) -> Result<(), std::io::Error> { // this one will truncate or overwrite the entire file 
@@ -81,33 +87,30 @@ pub fn search_and_destroy(file_path: &str, string_to_delete: &str) -> Result<(),
     Ok(())
 }
 
-pub fn scanfiles_andignore(realpath:&str) -> Vec<String> { 
-    let ignore = littignore().unwrap().join("\n");
-    let mut filelist:Vec<String> = Vec::new();
-    if let Ok(dirf) = fs::read_dir(realpath)
-    {
-        for path in dirf{
+pub fn scanfiles_andignore(realpath: &str) -> Vec<String> {
+    let ignore = littignore().unwrap(); 
+    let mut filelist: Vec<String> = Vec::new();
+
+    if let Ok(dirf) = fs::read_dir(realpath) {
+        for path in dirf {
             if let Ok(path) = path {
-                if let Ok(metta) = path.metadata(){ 
-                    if ignore.contains(&path.path().to_str().unwrap().to_string()) {continue;}
-                    if metta.is_dir(){
-                        //if ignore.contains(path.file_name().to_string_lossy().to_string().borrow_mut()) {continue;}
-                        filelist.extend(scanfiles_andignore(&path.path().to_string_lossy()));
-                    }
-                    else if metta.is_file() {
-                        //println!("{:?}",path.path().to_str().unwrap());
-                        filelist.push(path.path().to_str().unwrap().to_string());
-                        //println!("{:?}",path.path().to_str().unwrap());
+                let canonical_path = path.path().canonicalize().unwrap(); 
+                if ignore.iter().any(|substring| canonical_path.to_string_lossy().contains(substring)) {
+                    continue;
+
+                }
+                if let Ok(metta) = path.metadata() {
+                    if metta.is_dir() {
+                        filelist.extend(scanfiles_andignore(&canonical_path.to_string_lossy()));
+                    } else if metta.is_file() {
+                        filelist.push(canonical_path.to_string_lossy().to_string());
                     }
                 }
-                
             }
-            
         }
     }
 
-
-    return filelist;
+    filelist
 }
 
 pub fn scanobjects(hash:&str) -> String { 

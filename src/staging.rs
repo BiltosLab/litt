@@ -29,7 +29,7 @@ pub fn add(addargs:&str) { //template for add func
    // while !checkfiletracker(scanfile_andignore("./",&ignorelist)){ filetrackupdater(scanfile_andignore("./",&ignorelist));}
     // for an unknown reason running filetrackerupdater once if the file has been changed aka a file has been deleted and list doesnt equal the file because of that it makes the file act funny idk 
     //this seems to have fixed it
-    blob("./src/main.rs");
+    //blob("./src/main.rs");
     //let f = computehash("./src/main.rs").unwrap();
     //catf(format!("{}{}",objdir,f).as_str());
     println!("ok here i did litt cat and first few letters in the commit hash so lets decompress then ill see what i can do");
