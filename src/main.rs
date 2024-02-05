@@ -15,7 +15,7 @@ fn main() -> Result<(), io::Error> {
     match cmd.as_str() {
         "init" => littinit::init(),
         "add" => { if args.len() < 3 {println!("ERROR! No args provided for add.");exit(1);}
-            staging::add(&args[2]);
+            staging::add(args.into_iter().skip(2).collect());
         },
         "commit" => commits::commit(),
         "status" => status()?,

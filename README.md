@@ -20,4 +20,4 @@ This project aims to produce a working VCS "Version Control System" that actuall
 1. First big TODO and an important one is to remove unwraps and do proper error handling. [after we have a functioning prototype]
 2. (git add implementation) Compress the files to an object blob with the file's hash as the name. [doing it rn]
 3. (git commit implementation) still learning what it does exactly.
-4. Windows issues on path stuff idk why eg (.littignore needs this to block target folder ".\target" but on unix "./target")
+4. Windows issues on path stuff idk why eg (.littignore needs this to block target folder ".\target" but on unix "./target") [Fixed but not tested yet.]

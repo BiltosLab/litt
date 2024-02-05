@@ -29,7 +29,8 @@ pub fn filetostring(filetoparse:&str) -> Result<Vec<String>, io::Error>{ // Func
 
 pub fn littignore() -> Result<HashSet<String>, io::Error> {
     let file = filetostring("./.littignore")?;
-    let hashset_of_strings: HashSet<_> = file.into_iter().collect();
+    let mut hashset_of_strings: HashSet<_> = file.into_iter().collect();
+    hashset_of_strings.insert("/.litt".to_string());
     Ok(hashset_of_strings)
 }
 
@@ -87,8 +88,8 @@ pub fn search_and_destroy(file_path: &str, string_to_delete: &str) -> Result<(),
     Ok(())
 }
 
-pub fn scanfiles_andignore(realpath: &str) -> Vec<String> {
-    let ignore = littignore().unwrap(); 
+pub fn scanfiles_and_ignore(realpath: &str) -> Vec<String> {
+    let ignore = littignore().unwrap();
     let mut filelist: Vec<String> = Vec::new();
 
     if let Ok(dirf) = fs::read_dir(realpath) {
@@ -101,7 +102,7 @@ pub fn scanfiles_andignore(realpath: &str) -> Vec<String> {
                 }
                 if let Ok(metta) = path.metadata() {
                     if metta.is_dir() {
-                        filelist.extend(scanfiles_andignore(&canonical_path.to_string_lossy()));
+                        filelist.extend(scanfiles_and_ignore(&canonical_path.to_string_lossy()));
                     } else if metta.is_file() {
                         filelist.push(canonical_path.to_string_lossy().to_string());
                     }
@@ -256,4 +257,8 @@ pub fn compressfile(inputfile:&str,outputfile:&str) -> std::io::Result<()> {
     std::io::copy(&mut reader, &mut encoder)?;
     encoder.finish()?;
     Ok(())
+}
+
+pub fn file_exists(file_path: &str) -> bool {
+    fs::metadata(file_path).is_ok()
 }
