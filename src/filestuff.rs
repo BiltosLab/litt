@@ -1,7 +1,7 @@
 /*
     This file contains all the functions that do operations of files 
 */
-use std::{fs,fs::{File, OpenOptions, DirBuilder},io::{Write,BufRead, self, BufReader, BufWriter},io::Read};
+use std::{fs::{self, DirBuilder, File, OpenOptions},io::{self, BufRead, BufReader, BufWriter, Read, Write},path::{Path, PathBuf}};
 use colored::Colorize;
 use sha2::{Sha256,Digest};
 use std::borrow::BorrowMut;
@@ -259,6 +259,21 @@ pub fn compressfile(inputfile:&str,outputfile:&str) -> std::io::Result<()> {
     Ok(())
 }
 
+
+pub fn normalize_path(file_path: &str) -> PathBuf {
+    // If the path is relative, convert it to an absolute path
+    if !Path::new(file_path).is_absolute() {
+        // Assuming the current working directory is the base directory
+        let mut abs_path = std::env::current_dir().expect("Failed to get current directory");
+        abs_path.push(file_path);
+        abs_path
+    } else {
+        // If the path is already absolute, keep it as is
+        PathBuf::from(file_path)
+    }
+}
+
 pub fn file_exists(file_path: &str) -> bool {
-    fs::metadata(file_path).is_ok()
+    let normalized_path = normalize_path(file_path);
+    fs::metadata(&normalized_path).is_ok()
 }
