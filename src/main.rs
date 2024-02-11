@@ -6,6 +6,7 @@ mod staging;
 mod filestuff;
 mod diff;
 mod commits;
+mod parsingops;
 // figure out how to use env variables to store email,name of the commiter much easier than the other one i was thinking about 
 // which was create a file in .config/litt and store info there idk tbh 
 fn main() -> Result<(), io::Error> {
@@ -44,6 +45,7 @@ fn status() ->Result<(), io::Error>  { //template for status func
 
 fn log() {  //template for log func
     println!("Commit history:");
+    println!("{:?}",parsingops::indexparser());
 }
 
 
