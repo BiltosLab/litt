@@ -1,6 +1,6 @@
-use std::string::ParseError;
+use std::{string::ParseError, ops::Index};
 
-use crate::filetostring;
+use crate::{filetostring, filestuff::stringtofile};
 #[derive(Debug)]
 struct IndexEntry {
     entry_number: u32,
@@ -12,7 +12,7 @@ struct IndexEntry {
     uid: u32,
     gid: u32,
     size: u64,
-    sha1: String,
+    sha: String,
     flags: u16,
     assume_valid: bool,
     extended: bool,
@@ -32,7 +32,7 @@ impl Default for IndexEntry {
           uid: 0,
           gid: 0,
           size: 0,
-          sha1: "".to_string(),
+          sha: "".to_string(),
           flags: 0,
           assume_valid: false,
           extended: false,
@@ -56,6 +56,7 @@ pub fn indexparser() -> Vec<String>{
         entries.push(indexentryparser(a.clone()).unwrap());
       }
     }
+    entriestostring(entries.get(1).expect("Invalid"));
     println!("{:#?}",entries);
     file
 
@@ -77,7 +78,7 @@ fn indexentryparser(entrystr:Vec<String>) -> Result<IndexEntry, ParseError> {
           "uid" => entry.uid = value.parse().unwrap(),
           "gid" => entry.gid = value.parse().unwrap(),
           "size" => entry.size = value.parse().unwrap(),
-          "sha1" => entry.sha1 = value.to_string(), // Assuming sha1 is a string
+          "sha" => entry.sha = value.to_string(), // Assuming sha is a string
           "flags" => entry.flags = value.parse().unwrap(),
           "assume-valid" => entry.assume_valid = value.parse().unwrap(),
           "extended" => entry.extended = value.parse().unwrap(),
@@ -92,6 +93,41 @@ fn indexentryparser(entrystr:Vec<String>) -> Result<IndexEntry, ParseError> {
       }
       Ok(entry)
 }
+
+/*
+* Function to add an entry to index
+* has to be A--Z or 1--9
+* i think best option is to parse the entire file with indexentryparser and the rest the make the new index again
+*/
+
+pub fn insertindex(){
+  let file = filetostring("./.litt/index").unwrap();
+}
+
+fn entriestostring(entry:&IndexEntry){
+  let mut stringout:Vec<String> = Vec::new();
+  stringout.push("[entry]".to_string());
+  stringout.push(format!("  entry = {}",entry.entry_number));
+  stringout.push(format!("  ctime = {}",entry.ctime));
+  stringout.push(format!("  mtime = {}",entry.mtime));
+  stringout.push(format!("  dev  = {}",entry.dev));
+  stringout.push(format!("  ino = {}",entry.ino));
+  stringout.push(format!("  mode = {}",entry.mode));
+  stringout.push(format!("  uid = {}",entry.uid));
+  stringout.push(format!("  gid = {}",entry.gid));
+  stringout.push(format!("  size = {}",entry.size));
+  stringout.push(format!("  sha = {}",entry.sha));
+  stringout.push(format!("  flags = {}",entry.flags));
+  stringout.push(format!("  assume-valid = {}",entry.assume_valid));
+  stringout.push(format!("  extended = {}",entry.extended));
+  stringout.push(format!("  stage = {},{}",entry.stage.0,entry.stage.1));
+  stringout.push(format!("  name = {}",entry.name));
+  stringtofile("./.litt/ape", stringout).unwrap();
+}
+
+
+
+
 
 /* This is how git index looks like and that's what we're going to mimic
 [header]
@@ -109,14 +145,14 @@ fn indexentryparser(entrystr:Vec<String>) -> Result<IndexEntry, ParseError> {
   uid = 501
   gid = 20
   size = 6
-  sha1 = d5f7fc3f74f7dec08280f370a975b112e8f60818
+  sha = d5f7fc3f74f7dec08280f370a975b112e8f60818
   flags = 9
-  assume-valid = False
-  extended = False
-  stage = (False, False)
+  assume-valid = false
+  extended = false
+  stage = false,false
   name = added.txt
 
 [checksum]
   checksum = True
-  sha1 = 1ef0972eb948e6229240668effcb9c600fe5888d
+  sha = 1ef0972eb948e6229240668effcb9c600fe5888d
    */
