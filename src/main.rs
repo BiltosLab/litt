@@ -45,7 +45,8 @@ fn status() ->Result<(), io::Error>  { //template for status func
 
 fn log() {  //template for log func
     println!("Commit history:");
-    println!("{:?}",parsingops::indexparser());
+    parsingops::indexparser();
+    //println!("{:?}",parsingops::indexparser());
 }
 
 
