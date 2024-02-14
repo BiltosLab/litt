@@ -52,5 +52,6 @@ fn log() {  //template for log func
 
 
 fn helpcom(){
+    scanfiles_and_ignore(".");
     println!("Litt Usage:\nlitt <first arg> <second arg> <third arg>\nEX: litt add . OR litt add file1.c file2.c\n");
 }

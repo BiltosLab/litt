@@ -26,10 +26,31 @@ pub fn filetostring(filetoparse:&str) -> Result<Vec<String>, io::Error>{ // Func
     let file = filetostring("./.littignore")?;
     Ok(file)
 }*/
+fn path_fix(path: String) -> String {
+    let mut path = path;
 
-pub fn littignore() -> Result<HashSet<String>, io::Error> {
-    let file = filetostring("./.littignore")?;
-    let mut hashset_of_strings: HashSet<_> = file.into_iter().collect();
+    if path.starts_with(".") { // Only code that works from AI :D eno wow
+        path = path[1..].to_string();
+    }
+    if path.contains("/") {
+        path = path.replace("/", r"\");
+    }
+    
+    path
+}
+pub fn windowslittignore() -> Result<HashSet<String>, io::Error> { 
+    let mut newfile: Vec<String> = vec![];
+    for path in filetostring(".littignore")? {
+        newfile.push(path_fix(path));
+    }
+    let mut hashset_of_strings: HashSet<_> = newfile.into_iter().collect(); 
+    hashset_of_strings.insert(".litt".to_string());
+    Ok(hashset_of_strings)
+}
+
+pub fn littignore() -> Result<HashSet<String>, io::Error> { 
+    let file = filetostring("./.littignore")?; 
+    let mut hashset_of_strings: HashSet<_> = file.into_iter().collect(); 
     hashset_of_strings.insert("/.litt".to_string());
     Ok(hashset_of_strings)
 }
@@ -88,30 +109,37 @@ pub fn search_and_destroy(file_path: &str, string_to_delete: &str) -> Result<(),
     Ok(())
 }
 
-pub fn scanfiles_and_ignore(realpath: &str) -> Vec<String> {
-    let ignore = littignore().unwrap();
-    let mut filelist: Vec<String> = Vec::new();
-
-    if let Ok(dirf) = fs::read_dir(realpath) {
-        for path in dirf {
+pub fn scanfiles_and_ignore(realpath:&str) -> Vec<String> { 
+    let ignore = windowslittignore().unwrap();
+    let mut filelist:Vec<String> = Vec::new();
+    
+    if let Ok(dirf) = fs::read_dir(realpath)
+    {
+        for path in dirf{
             if let Ok(path) = path {
-                let canonical_path = path.path().canonicalize().unwrap(); 
-                if ignore.iter().any(|substring| canonical_path.to_string_lossy().contains(substring)) {
-                    continue;
-
-                }
-                if let Ok(metta) = path.metadata() {
-                    if metta.is_dir() {
-                        filelist.extend(scanfiles_and_ignore(&canonical_path.to_string_lossy()));
-                    } else if metta.is_file() {
-                        filelist.push(canonical_path.to_string_lossy().to_string());
+                if let Ok(metta) = path.metadata(){ 
+                    let path_str = path.path().to_str().unwrap().to_string();
+                    if ignore.iter().any(|ignore_path| path_str.contains(ignore_path)) {
+                        continue;
+                    }
+                    if metta.is_dir(){
+                        //if ignore.contains(path.file_name().to_string_lossy().to_string().borrow_mut()) {continue;}
+                        filelist.extend(scanfiles_and_ignore(&path.path().to_string_lossy()));
+                    }
+                    else if metta.is_file() {
+                        //println!("{:?}",path.path().to_str().unwrap());
+                        filelist.push(path.path().to_str().unwrap().to_string());
+                        //println!("{:?}",path.path().to_str().unwrap());
                     }
                 }
+                
             }
+            
         }
     }
 
-    filelist
+
+    return filelist;
 }
 
 pub fn scanobjects(hash:&str) -> String { 
@@ -266,11 +294,15 @@ pub fn normalize_path(file_path: &str) -> PathBuf {
         // Assuming the current working directory is the base directory
         let mut abs_path = std::env::current_dir().expect("Failed to get current directory");
         abs_path.push(file_path);
+        println!("Path was not abs{:#?}",abs_path);
         abs_path
     } else {
         // If the path is already absolute, keep it as is
+        println!("Path is already abs{:#?}",PathBuf::from(file_path));
         PathBuf::from(file_path)
+        
     }
+     
 }
 
 pub fn file_exists(file_path: &str) -> bool {
