@@ -1,8 +1,36 @@
-use std::{string::ParseError, ops::Index};
-
+use core::panic;
+use std::{cmp::Ordering, ops::Index, string::ParseError};
 use crate::{filetostring, filestuff::stringtofile};
 #[derive(Debug)]
-struct IndexEntry {
+pub struct IndexHeader {
+  signature:String,
+  version:i8,
+  entries:u64,
+}
+impl Default for IndexHeader {
+    fn default() -> Self {
+      Self {
+      signature:"".to_string(),
+      version:0,
+      entries:0,
+    }
+    }
+}
+#[derive(Debug)]
+pub struct IndexChecksum {
+  checksum:bool,
+  sha:String,
+}
+impl Default for IndexChecksum {
+    fn default() -> Self {
+      Self {
+      checksum:false,
+      sha:"".to_string(),
+    }
+    }
+}
+#[derive(Debug)]
+pub struct IndexEntry {
     entry_number: u32,
     ctime: f64,
     mtime: f64,
@@ -42,23 +70,47 @@ impl Default for IndexEntry {
   }
 }
 
-pub fn indexparser() -> Vec<String>{
-  let mut entries: Vec<IndexEntry> = Vec::new();
-    let file=filetostring("./.litt/index").unwrap();
+pub fn indexparser() -> (IndexHeader,Vec<IndexEntry>,IndexChecksum){ 
+  let mut entries: Vec<IndexEntry> = Vec::new(); // WE SHOULD ADD ENTRIES TO THIS AND THEN WHEN WRITING WE PUSH THIS TO THE FILE.
+  let mut indexheader:IndexHeader = Default::default();
+  let mut indexchecksum:IndexChecksum = Default::default();
 
-    let mut a:Vec<String> = vec![];
-    for mut i in 0..file.len(){
+    let file=filetostring("./.litt/index").unwrap();
+    let mut entry:Vec<String> = vec![];
+    let mut header:Vec<String> = vec![];
+    let mut checksum:Vec<String> = vec![];
+    if file.get(0).expect("Failed to read file") == "[header]"{
+    for k in 1..4 {header.push(file.get(k).unwrap().to_string())}
+    indexheader=indexheaderparser(header).expect("Invalid");
+    for mut i in 4..file.len(){
       if file.get(i).unwrap() == "[entry]"{
         i += 1;
         for j in i..i+15{
-          a.push(file.get(j).unwrap().to_string());
+          entry.push(file.get(j).unwrap().to_string());
         }
-        entries.push(indexentryparser(a.clone()).unwrap());
+        // dont we need to increment i by 15 here? since we parsed the entire entry in the above for loop
+        // its prob a performance hit checking every index when we already parsed the entry no?
+        i += 15; // Testing
+        entries.push(indexentryparser(entry.clone()).unwrap());
       }
+      if file.get(i).unwrap() == "[checksum]"{
+        i +=1;
+        for i in i..file.len(){checksum.push(file.get(i).unwrap().to_string());}
+        indexchecksum=indexchecksumparser(checksum).expect("Invalid");
+        break;
+      }
+
     }
+  }
+  else {
+      eprintln!("Index File Corrupted?");
+  }
     entriestostring(entries.get(1).expect("Invalid"));
+    unsigned_byte_sort_structs(&mut entries);
+    println!("{:#?}",indexheader);
     println!("{:#?}",entries);
-    file
+    println!("{:#?}",indexchecksum);
+    (indexheader,entries,indexchecksum)
 
 }
 
@@ -69,7 +121,7 @@ fn indexentryparser(entrystr:Vec<String>) -> Result<IndexEntry, ParseError> {
         let (key, value) = (parts[0].trim(), parts[1].trim());
 
         match key {
-          "entry" => entry.entry_number = value.parse().unwrap(),
+          "entry" => entry.entry_number = value.parse().expect("Failed to read entry"), // expect testing idk still learning rust.
           "ctime" => entry.ctime = value.parse().unwrap(),
           "mtime" => entry.mtime = value.parse().unwrap(),
           "dev" => entry.dev = value.parse().unwrap(),
@@ -94,16 +146,15 @@ fn indexentryparser(entrystr:Vec<String>) -> Result<IndexEntry, ParseError> {
       Ok(entry)
 }
 
-/*
-* Function to add an entry to index
-* has to be A--Z or 1--9
-* i think best option is to parse the entire file with indexentryparser and the rest the make the new index again
-*/
+
 
 pub fn insertindex(){
   let file = filetostring("./.litt/index").unwrap();
 }
-
+/*
+* Bit 0: 0 = unmodified, 1 = version from ours branch
+* Bit 1: 0 = unmodified, 1 = version from theirs branch
+*/
 fn entriestostring(entry:&IndexEntry){
   let mut stringout:Vec<String> = Vec::new();
   stringout.push("[entry]".to_string());
@@ -122,12 +173,85 @@ fn entriestostring(entry:&IndexEntry){
   stringout.push(format!("  extended = {}",entry.extended));
   stringout.push(format!("  stage = {},{}",entry.stage.0,entry.stage.1));
   stringout.push(format!("  name = {}",entry.name));
-  stringtofile("./.litt/ape", stringout).unwrap();
+  stringtofile("./.litt/ape", stringout).expect("Failed Stringtofile ./.litt/ape");
 }
 
+fn indexheaderparser(header:Vec<String>) -> Result<IndexHeader, ParseError>{
+  let mut index_header:IndexHeader = Default::default();
+  for line in header{
+    let parts: Vec<&str> = line.splitn(2, '=').collect();
+    let (key, value) = (parts[0].trim(), parts[1].trim());
+    match key { 
+      "signature" => index_header.signature=value.parse().unwrap(),
+      "version" => index_header.version = value.parse().unwrap(),
+      "entries" => index_header.entries = value.parse().expect("Failed at entries"),
+      _ => {} // Ignore unknown keys
+    }
+  }
+  Ok(index_header)
+}
 
+fn indexchecksumparser(checksumh:Vec<String>) -> Result<IndexChecksum, ParseError> {
+  let mut indexchecksum:IndexChecksum = Default::default();
+  for line in checksumh{
+    let parts: Vec<&str> = line.splitn(2, '=').collect();
+    let (key, value) = (parts[0].trim(), parts[1].trim());
+    match key { 
+      "checksum" => indexchecksum.checksum = value.parse().unwrap(),
+      "sha" => indexchecksum.sha = value.parse().unwrap(),
+      _ => {} // Ignore unknown keys
+    }
+  }
+  Ok(indexchecksum)
+}
 
+// TODO now functions to take the 3 struct types 1 of header 1 of checksum and X number of Entry structs
+// And convert them to a file so we can generate an entry and insert it to the index file
+// also i want to compress and decompress index at use just to save more space.
+/*
+* Function to add an entry to index
+* has to be A--Z or 1--9 Sorted.
+* i think best option is to parse the entire file with indexentryparser and the rest the make the new index again
+*/
+/*
+* How this function should work? First take an Vec<IndexEntry> of entires then append new entries to it
+* Then sort them based on name ? or as git sorts it then we just rewrite new index
+* With new hash at the end?
+*/
+pub fn addentries(newentires:Vec<IndexEntry>) {
+  let (mut indexheader,mut entries,mut indexchecksum) = indexparser();
 
+}
+fn unsigned_byte_sort_structs(entries: &mut Vec<IndexEntry>) {
+  entries.sort_unstable_by(|a, b| {
+      // 1. Compare names using unsigned byte comparison
+      match a.name.as_bytes().cmp(b.name.as_bytes()) {
+          Ordering::Equal => {
+              // 2. If names are equal, compare stage.0 using bool as u8
+              let a_stage0 = a.stage.0 as u8;
+              let b_stage0 = b.stage.0 as u8;
+              match a_stage0.cmp(&b_stage0) {
+                  Ordering::Equal => {
+                      // 3. If stage.0 are equal, compare stage.1 using bool as u8
+                      let a_stage1 = a.stage.1 as u8;
+                      let b_stage1 = b.stage.1 as u8;
+                      a_stage1.cmp(&b_stage1)
+                  }
+                  // 4. Otherwise, return stage.0 comparison result
+                  other => other,
+              }
+          }
+          // 5. Otherwise, return the name comparison result
+          other => other,
+      }
+  });
+}
+/*fn unsigned_byte_sort_structs(entries: &mut Vec<IndexEntry>) {
+  entries.sort_unstable_by(|a, b| {
+        // Compare names using unsigned byte comparison
+        a.name.as_bytes().cmp(b.name.as_bytes())
+    });
+}*/
 
 /* This is how git index looks like and that's what we're going to mimic
 [header]
@@ -151,6 +275,22 @@ fn entriestostring(entry:&IndexEntry){
   extended = false
   stage = false,false
   name = added.txt
+[entry]
+  entry = 2
+  ctime = 123124.0
+  mtime = 12312312.0
+  dev = 444412
+  ino = 1154043
+  mode = 111111
+  uid = 244
+  gid = 224
+  size = 6
+  sha = d5f7fc3f74f7dec08280f370a975b112e8f60818
+  flags = 9
+  assume-valid = false
+  extended = false
+  stage = false,false
+  name = bobo.txt
 
 [checksum]
   checksum = True

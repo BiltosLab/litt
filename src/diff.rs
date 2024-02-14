@@ -1,6 +1,6 @@
 use colored::*;
 
-pub fn find_diff_lines(file1: Vec<String>, file2: Vec<String>) -> Vec<String> {
+pub fn find_diff_lines(file1: Vec<String>, file2: Vec<String>) -> Vec<String> { // need to make this give the location of the diff later on
     let mut differences: Vec<String> = Vec::new();
 
     let max_lines = file1.len().max(file2.len());

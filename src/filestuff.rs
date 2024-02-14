@@ -182,7 +182,7 @@ tags will be skipped till i know what they do .
 
 */
 
-pub fn create_object(objtype:&str)
+pub fn create_object(objtype:&str) // deprecate.
 {
     // match first for objtype blob,tree,commit,tag 
     // we will add the type to the very top of the object file
