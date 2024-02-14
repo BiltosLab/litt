@@ -148,9 +148,7 @@ fn indexentryparser(entrystr:Vec<String>) -> Result<IndexEntry, ParseError> {
 
 
 
-pub fn insertindex(){
-  let file = filetostring("./.litt/index").unwrap();
-}
+
 /*
 * Bit 0: 0 = unmodified, 1 = version from ours branch
 * Bit 1: 0 = unmodified, 1 = version from theirs branch
@@ -218,10 +216,13 @@ fn indexchecksumparser(checksumh:Vec<String>) -> Result<IndexChecksum, ParseErro
 * Then sort them based on name ? or as git sorts it then we just rewrite new index
 * With new hash at the end?
 */
-pub fn addentries(newentires:Vec<IndexEntry>) {
+pub fn insert_new_index_entries(newentires:Vec<IndexEntry>){
   let (mut indexheader,mut entries,mut indexchecksum) = indexparser();
-
+  entries.extend(newentires);
+  unsigned_byte_sort_structs(&mut entries);
+  //TODO after this basic thing just stitch everything back toghether into a new index file :D
 }
+
 fn unsigned_byte_sort_structs(entries: &mut Vec<IndexEntry>) {
   entries.sort_unstable_by(|a, b| {
       // 1. Compare names using unsigned byte comparison
@@ -246,12 +247,6 @@ fn unsigned_byte_sort_structs(entries: &mut Vec<IndexEntry>) {
       }
   });
 }
-/*fn unsigned_byte_sort_structs(entries: &mut Vec<IndexEntry>) {
-  entries.sort_unstable_by(|a, b| {
-        // Compare names using unsigned byte comparison
-        a.name.as_bytes().cmp(b.name.as_bytes())
-    });
-}*/
 
 /* This is how git index looks like and that's what we're going to mimic
 [header]
