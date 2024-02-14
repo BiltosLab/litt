@@ -38,7 +38,8 @@ fn path_fix(path: String) -> String {
     
     path
 }
-pub fn windowslittignore() -> Result<HashSet<String>, io::Error> { 
+#[cfg(target_os = "windows")]
+pub fn littignore() -> Result<HashSet<String>, io::Error> { 
     let mut newfile: Vec<String> = vec![];
     for path in filetostring(".littignore")? {
         newfile.push(path_fix(path));
@@ -47,7 +48,7 @@ pub fn windowslittignore() -> Result<HashSet<String>, io::Error> {
     hashset_of_strings.insert(".litt".to_string());
     Ok(hashset_of_strings)
 }
-
+#[cfg(not(target_os = "windows"))]
 pub fn littignore() -> Result<HashSet<String>, io::Error> { 
     let file = filetostring("./.littignore")?; 
     let mut hashset_of_strings: HashSet<_> = file.into_iter().collect(); 
@@ -110,7 +111,7 @@ pub fn search_and_destroy(file_path: &str, string_to_delete: &str) -> Result<(),
 }
 
 pub fn scanfiles_and_ignore(realpath:&str) -> Vec<String> { 
-    let ignore = windowslittignore().unwrap();
+    let ignore = littignore().unwrap();
     let mut filelist:Vec<String> = Vec::new();
     
     if let Ok(dirf) = fs::read_dir(realpath)
