@@ -182,29 +182,7 @@ tags will be skipped till i know what they do .
 
 */
 
-pub fn create_object(objtype:&str) // deprecate.
-{
-    // match first for objtype blob,tree,commit,tag 
-    // we will add the type to the very top of the object file
-    // then add neccessary content wether its the commit author parent message or whatever 
-    // after finishing it up we hash it then compress it and give it a filename of the hash we got 
-    // preferably we mimic how git does it by removing the first 2 letters and using it as the 
-    //folder name then the rest of it will be the file name inside that folder
-    // tree objects have the following format <File Permissions> <File type> <SHA-256 HASH> <Filename>
-    let mut objfile:Vec<String>= Vec::new();
-    match objtype {
-        "blob" => {objfile.push("BLOB".to_string());
-    },
-        "tree" => {objfile.push("TREE".to_string());
-    },
-        "commit" => {objfile.push("COMMIT".to_string());
-    },
-        _ => println!("Unknown command: {}", objtype),
-    }
-    if let Err(err) = appendv_to_file(compute_vec_hash(&objfile).as_str(),objfile){
-        eprintln!("Error {}",err);
-    }
-}
+
 
 pub fn computehash(file: &str) -> Result<String, io::Error> { // Need to change this to return result instead but its fine for testing i guess
     // Open the file
@@ -222,18 +200,6 @@ pub fn computehash(file: &str) -> Result<String, io::Error> { // Need to change 
         }
         hasher.update(&buffer[..bytes_read]);
     }
-/*
-while let Ok(bytes_read) = file.read(&mut buffer) {
-        if bytes_read == 0 {
-            break;
-        }
-        hasher.update(&buffer[..bytes_read]);
-    } 
-    // another implementation for that loop i feel this is better
-    // but w.e we can take care of it later current loop causes no trouble till we deal with the
-    // unwrap stuff.
-    */
-
     
     // Finalize the hash and get the result as a byte array
     let result = format!("{:x}", hasher.finalize());
@@ -295,11 +261,11 @@ pub fn normalize_path(file_path: &str) -> PathBuf {
         // Assuming the current working directory is the base directory
         let mut abs_path = std::env::current_dir().expect("Failed to get current directory");
         abs_path.push(file_path);
-        println!("Path was not abs{:#?}",abs_path);
+        //println!("Path was not abs{:#?}",abs_path);
         abs_path
     } else {
         // If the path is already absolute, keep it as is
-        println!("Path is already abs{:#?}",PathBuf::from(file_path));
+        //println!("Path is already abs{:#?}",PathBuf::from(file_path));
         PathBuf::from(file_path)
         
     }
@@ -307,6 +273,6 @@ pub fn normalize_path(file_path: &str) -> PathBuf {
 }
 
 pub fn file_exists(file_path: &str) -> bool {
-    let normalized_path = normalize_path(file_path);
-    fs::metadata(&normalized_path).is_ok()
+    let path = Path::new(file_path);
+    path.exists()
 }

@@ -54,9 +54,15 @@ fn status() -> Result<(), io::Error> {
 
 fn log() {
     //template for log func
-    println!("Commit history:");
-    parsingops::indexparser();
+    //println!("Commit history:");
+    //parsingops::indexparser();
     //println!("{:?}",parsingops::indexparser());
+    if file_exists("./.litt") {
+        println!("EXISTS");
+    }
+    else {
+        println!("DOES NOT EXIST")
+    }
 }
 
 fn helpcom() {

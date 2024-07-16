@@ -3,8 +3,8 @@ use std::{fs,fs::DirBuilder,fs::File,io::Write};
 use crate::filestuff::*;
 
 pub fn init() { // TODO! : Implement an init func aka create files and dirs and setup something idk
-    if !file_exists(".litt") {
-        println!("fatal: not a litt repository ");
+    if file_exists("./.litt") { // i think this will suffice 
+        println!("litt repository already exists");
         return;
     }
 
