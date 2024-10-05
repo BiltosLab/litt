@@ -1,6 +1,9 @@
 use core::panic;
 use std::{cmp::Ordering, ops::Index, string::ParseError};
+use std::fmt::format;
 use crate::{filetostring, filestuff::stringtofile};
+use crate::filestuff::compute_vec_hash;
+
 #[derive(Debug)]
 pub struct IndexHeader {
   signature:String,
@@ -105,11 +108,11 @@ pub fn indexparser() -> (IndexHeader,Vec<IndexEntry>,IndexChecksum){
   else {
       eprintln!("Index File Corrupted?");
   }
-    entriestostring(entries.get(1).expect("Invalid"));
-    unsigned_byte_sort_structs(&mut entries);
-    println!("{:#?}",indexheader);
-    println!("{:#?}",entries);
-    println!("{:#?}",indexchecksum);
+    // entriestostring(entries.get(1).expect("Invalid"));
+    // unsigned_byte_sort_structs(&mut entries);
+    // println!("{:#?}",indexheader);
+    // println!("{:#?}",entries);
+    // println!("{:#?}",indexchecksum);
     (indexheader,entries,indexchecksum)
 
 }
@@ -153,7 +156,7 @@ fn indexentryparser(entrystr:Vec<String>) -> Result<IndexEntry, ParseError> {
 * Bit 0: 0 = unmodified, 1 = version from ours branch
 * Bit 1: 0 = unmodified, 1 = version from theirs branch
 */
-fn entriestostring(entry:&IndexEntry){
+fn entries_to_string_vec(entry:&IndexEntry) -> Vec<String> {
   let mut stringout:Vec<String> = Vec::new();
   stringout.push("[entry]".to_string());
   stringout.push(format!("  entry = {}",entry.entry_number));
@@ -171,7 +174,32 @@ fn entriestostring(entry:&IndexEntry){
   stringout.push(format!("  extended = {}",entry.extended));
   stringout.push(format!("  stage = {},{}",entry.stage.0,entry.stage.1));
   stringout.push(format!("  name = {}",entry.name));
-  stringtofile("./.litt/ape", stringout).expect("Failed Stringtofile ./.litt/ape");
+
+    stringout
+}
+
+// [header]
+// signature = DIRC
+// version = 3
+// entries = 5
+
+fn indexheader_to_string_vec(header:&IndexHeader,entries:i128) -> Vec<String> {
+    let mut stringout:Vec<String> = Vec::new();
+    stringout.push("[header]".to_string());
+    stringout.push(format!("  signature = {}",header.signature));
+    stringout.push(format!("  version = {}",header.version));
+    stringout.push(format!("  entries = {}",entries.to_string()));
+    stringout
+}
+// [checksum]
+// checksum = True
+// sha = 1ef0972eb948e6229240668effcb9c600fe5888d
+fn indexchecksum_to_string_vec(index_checksum: IndexChecksum, checksum:String) -> Vec<String> {
+    let mut stringout:Vec<String> = Vec::new();
+    stringout.push("[checksum]".to_string());
+    stringout.push(format!("  checksum = {}",index_checksum.checksum));
+    stringout.push(format!("  sha = {}",checksum));
+    stringout
 }
 
 fn indexheaderparser(header:Vec<String>) -> Result<IndexHeader, ParseError>{
@@ -216,12 +244,55 @@ fn indexchecksumparser(checksumh:Vec<String>) -> Result<IndexChecksum, ParseErro
 * Then sort them based on name ? or as git sorts it then we just rewrite new index
 * With new hash at the end?
 */
-pub fn insert_new_index_entries(newentires:Vec<IndexEntry>){
-  let (mut indexheader,mut entries,mut indexchecksum) = indexparser();
-  entries.extend(newentires);
-  unsigned_byte_sort_structs(&mut entries);
-  //TODO after this basic thing just stitch everything back toghether into a new index file :D
+
+pub fn test_indextemp () {
+    let mut entries: Vec<IndexEntry> = vec![];
+    let index_entry = IndexEntry {
+        entry_number: 1,
+        ctime: 1625097600.0, // Example UNIX timestamp for creation time
+        mtime: 1625184000.0, // Example UNIX timestamp for modification time
+        dev: 2049, // Example device number
+        ino: 12345678, // Example inode number
+        mode: 33188, // Example file mode (e.g., regular file with rw-r--r-- permissions)
+        uid: 1000, // Example user ID
+        gid: 1000, // Example group ID
+        size: 1024, // Example file size in bytes
+        sha: "9b4b51d8467ce19201efb8a9c9e63e8407bc646e".to_string(), // Example SHA-1 hash
+        flags: 0b0010, // Example flags
+        assume_valid: false, // Example validity flag
+        extended: false, // Example extended flag
+        stage: (false, true), // Example stage (e.g., added to the index)
+        name: "example_file.txt".to_string(), // Example file name
+    };
+    entries.push(index_entry);
+    insert_new_index_entries(entries);
+    println!("EXECUTED SUCCESSFULLY !")
 }
+pub fn insert_new_index_entries(newentires:Vec<IndexEntry>){
+    let (mut indexheader,mut entries,mut indexchecksum) = indexparser();
+    entries.extend(newentires);
+    unsigned_byte_sort_structs(&mut entries);
+    stringtofile("./.litt/index",stitch_index_file(indexheader,entries,indexchecksum)).unwrap();
+
+
+
+    //TODO after this basic thing just stitch everything back together into a new index file :D
+}
+
+fn stitch_index_file(index_header: IndexHeader,entries :Vec<IndexEntry>,index_checksum: IndexChecksum) -> Vec<String>{
+    let mut mainfile:Vec<String> = Vec::new();
+    let mut strentires:Vec<String> = Vec::new();
+    let entlen = entries.len();
+    strentires.extend(indexheader_to_string_vec(&index_header, entlen as i128));
+    for entry in entries {
+        strentires.extend(entries_to_string_vec(&entry));
+    }
+    strentires.extend(indexchecksum_to_string_vec(index_checksum,compute_vec_hash(&strentires)));
+
+    strentires
+}
+
+
 
 fn unsigned_byte_sort_structs(entries: &mut Vec<IndexEntry>) {
   entries.sort_unstable_by(|a, b| {
@@ -246,6 +317,13 @@ fn unsigned_byte_sort_structs(entries: &mut Vec<IndexEntry>) {
           other => other,
       }
   });
+    let mut i = 0;
+    for entry in entries {
+        i += 1;
+        entry.entry_number = i;
+    }
+
+
 }
 
 /* This is how git index looks like and that's what we're going to mimic

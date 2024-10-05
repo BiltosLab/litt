@@ -40,12 +40,13 @@ fn main() -> Result<(), io::Error> {
         _ => println!("Unknown command: {}", cmd),
     }
     println!("DONE!");
+
     exit(0);
 }
 
 fn status() -> Result<(), io::Error> {
     //template for status func
-    let original_lines = filetostring("./src/main.rs")?; // Just a note here : This original lines Vec<String> will get fetched from the database file using the commit number and our currect files will get compared to it
+    let original_lines = filetostring("./src/main.rs")?; // Just a note here : This original lines Vec<String> will get fetched from the database file using the commit number and our current files will get compared to it
     let modified_lines = filetostring("./src/main1.rs")?; //adbasdds
     let linediff = diff::find_diff_lines(original_lines, modified_lines);
     println!("Modified Lines Test:\n{}", linediff.join("\n"));
@@ -57,12 +58,8 @@ fn log() {
     //println!("Commit history:");
     //parsingops::indexparser();
     //println!("{:?}",parsingops::indexparser());
-    if file_exists("./.litt") {
-        println!("EXISTS");
-    }
-    else {
-        println!("DOES NOT EXIST")
-    }
+    parsingops::test_indextemp();
+    println!("IN LOG EXECUTED SUCCESSFULLY!");
 }
 
 fn helpcom() {
