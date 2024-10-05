@@ -3,12 +3,14 @@
 */
 use std::{fs::{self, DirBuilder, File, OpenOptions},io::{self, BufRead, BufReader, BufWriter, Read, Write},path::{Path, PathBuf}};
 use colored::Colorize;
+use std::sync::{Arc, Mutex};
+use std::thread;
 use sha2::{Sha256,Digest};
 use std::borrow::BorrowMut;
 use flate2::Compression;
 use flate2::write::DeflateEncoder;
 use flate2::read::DeflateDecoder;
-use std::collections::HashSet;
+use std::collections::{HashMap, HashSet};
 
 pub fn filetostring(filetoparse:&str) -> Result<Vec<String>, io::Error>{ // Function to Parse files line by line into a Vec<String>
     let mut f = File::open(filetoparse)?;
@@ -110,37 +112,91 @@ pub fn search_and_destroy(file_path: &str, string_to_delete: &str) -> Result<(),
     Ok(())
 }
 
-pub fn scanfiles_and_ignore(realpath:&str) -> Vec<String> { 
+// pub fn scanfiles_and_ignore(realpath:&str) -> Vec<String> {
+//     let ignore = littignore().unwrap();
+//     let mut filelist:Vec<String> = Vec::new();
+//
+//     if let Ok(dirf) = fs::read_dir(realpath)
+//     {
+//         for path in dirf{
+//             if let Ok(path) = path {
+//                 if let Ok(metta) = path.metadata(){
+//                     let path_str = path.path().to_str().unwrap().to_string();
+//                     if ignore.iter().any(|ignore_path| path_str.contains(ignore_path)) {
+//                         continue;
+//                     }
+//                     if metta.is_dir(){
+//                         //if ignore.contains(path.file_name().to_string_lossy().to_string().borrow_mut()) {continue;}
+//                         filelist.extend(scanfiles_and_ignore(&path.path().to_string_lossy()));
+//                     }
+//                     else if metta.is_file() {
+//                         //println!("{:?}",path.path().to_str().unwrap());
+//                         filelist.push(path.path().to_str().unwrap().to_string());
+//                         //println!("{:?}",path.path().to_str().unwrap());
+//                     }
+//                 }
+//
+//             }
+//
+//         }
+//     }
+//
+//
+//     filelist
+// }
+
+pub fn scanfiles_and_ignoremt(realpath: &str) -> Vec<String> {
+    // Get the ignore list
     let ignore = littignore().unwrap();
-    let mut filelist:Vec<String> = Vec::new();
-    
-    if let Ok(dirf) = fs::read_dir(realpath)
-    {
-        for path in dirf{
+
+    // Shared filelist using Arc and Mutex for thread-safe access
+    let filelist = Arc::new(Mutex::new(Vec::new()));
+
+    // Vector to hold thread handles
+    let mut handles = vec![];
+
+    // Check the directory
+    if let Ok(dirf) = fs::read_dir(realpath) {
+        for path in dirf {
             if let Ok(path) = path {
-                if let Ok(metta) = path.metadata(){ 
-                    let path_str = path.path().to_str().unwrap().to_string();
-                    if ignore.iter().any(|ignore_path| path_str.contains(ignore_path)) {
-                        continue;
+                let filelist = Arc::clone(&filelist);
+                let ignore = ignore.clone();  // Clone the ignore list for each thread
+
+                let handle = thread::spawn(move || {
+                    if let Ok(metta) = path.metadata() {
+                        let path_str = path.path().to_str().unwrap().to_string();
+
+                        // Skip if the path is in the ignore list
+                        if ignore.iter().any(|ignore_path| path_str.contains(ignore_path)) {
+                            return;
+                        }
+
+                        if metta.is_dir() {
+                            // Recurse into subdirectories in a separate thread
+                            let sublist = scanfiles_and_ignoremt(&path.path().to_string_lossy());
+                            let mut filelist_lock = filelist.lock().unwrap();
+                            filelist_lock.extend(sublist);
+                        } else if metta.is_file() {
+                            // Add file to filelist
+                            let mut filelist_lock = filelist.lock().unwrap();
+                            filelist_lock.push(path.path().to_str().unwrap().to_string());
+                        }
                     }
-                    if metta.is_dir(){
-                        //if ignore.contains(path.file_name().to_string_lossy().to_string().borrow_mut()) {continue;}
-                        filelist.extend(scanfiles_and_ignore(&path.path().to_string_lossy()));
-                    }
-                    else if metta.is_file() {
-                        //println!("{:?}",path.path().to_str().unwrap());
-                        filelist.push(path.path().to_str().unwrap().to_string());
-                        //println!("{:?}",path.path().to_str().unwrap());
-                    }
-                }
-                
+                });
+
+                handles.push(handle);
             }
-            
         }
     }
 
+    // Wait for all threads to finish
+    for handle in handles {
+        handle.join().unwrap();
+    }
 
-    return filelist;
+    // Return the final list of files
+    let filelist = Arc::try_unwrap(filelist).unwrap().into_inner().unwrap();
+    filelist
 }
 
 pub fn scanobjects(hash:&str) -> String { 
@@ -182,8 +238,141 @@ tags will be skipped till i know what they do .
 
 */
 
+// pub fn compress_files_in_parallel(file_paths: Vec<String>) -> std::io::Result<()> {
+//     let mut handles = vec![];
+//
+//     // Convert file_paths to Arc for safe multithreaded access (if needed)
+//     let file_paths = Arc::new(file_paths);
+//
+//     for inputfile in &*file_paths {
+//         let inputfile = inputfile.clone();
+//         // Use the calculatehash function to determine the output file name
+//         let outputfile = computehashmt(&inputfile)?;
+//         // compressfile(filename, ("./.litt/objects/".to_owned()+&a).as_str()).unwrap();
+//         // Spawn a new thread for each file compression task
+//         let handle = thread::spawn(move || {
+//             if let Err(e) = compressfile(&inputfile, ("./.litt/objects/".to_owned()+&outputfile).as_str()) {
+//                 eprintln!("Error compressing file {}: {}", inputfile, e);
+//             } else {
+//                 println!("Successfully compressed {} to {}", inputfile, outputfile);
+//             }
+//         });
+//
+//         // Push the thread handle into the vector
+//         handles.push(handle);
+//     }
+//
+//     // Wait for all threads to finish
+//     for handle in handles {
+//         handle.join().unwrap();
+//     }
+//
+//     Ok(())
+// }
 
 
+pub fn compress_files_in_parallel(file_paths: Vec<String>) -> Result<HashMap<String, String>, io::Error> {
+    let mut handles = vec![];
+
+    // HashMap to store file path and its computed hash
+    let file_hash_map = Arc::new(Mutex::new(HashMap::new()));
+
+    // Convert file_paths to Arc for safe multithreaded access
+    let file_paths = Arc::new(file_paths);
+
+    for inputfile in &*file_paths {
+        let inputfile = inputfile.clone();
+        let file_hash_map = Arc::clone(&file_hash_map); // Clone Arc for thread-safe access to the HashMap
+
+        // Spawn a new thread for each file compression task
+        let handle = thread::spawn(move || {
+            // Calculate the hash of the file
+            match computehashmt(&inputfile) {
+                Ok(outputfile) => {
+                    // Add the file path and its computed hash to the HashMap
+                    {
+                        let mut hash_map = file_hash_map.lock().unwrap();
+                        hash_map.insert(outputfile.clone(), inputfile.clone());
+                    }
+
+                    // Compress the file with the hash as part of the output file path
+                    if let Err(e) = compressfile(&inputfile, &("./.litt/objects/".to_owned() + &outputfile)) {
+                        eprintln!("Error compressing file {}: {}", inputfile, e);
+                    } else {
+                        println!("Successfully compressed {} to {}", inputfile, outputfile);
+                    }
+                }
+                Err(e) => {
+                    eprintln!("Error computing hash for file {}: {}", inputfile, e);
+                }
+            }
+        });
+
+        // Push the thread handle into the vector
+        handles.push(handle);
+    }
+
+    // Wait for all threads to finish
+    for handle in handles {
+        handle.join().unwrap();
+    }
+
+    // Access and print the file hash map (optional)
+    let final_hash_map = Arc::try_unwrap(file_hash_map)
+        .unwrap()
+        .into_inner()
+        .unwrap();
+
+    Ok(final_hash_map)
+}
+pub fn computehashmt(file: &str) -> Result<String, io::Error> {
+    // Open the file
+    let input_file = File::open(file)?;
+    let reader = BufReader::new(input_file);
+
+    // Buffer size and chunking parameters
+    let chunk_size = 4096; // 4KB chunks
+    let mut handles = vec![];
+
+    // Shared vector for storing intermediate hash results
+    let hash_results = Arc::new(Mutex::new(vec![]));
+
+    // Iterate over the file in chunks
+    for chunk in reader.bytes().collect::<Result<Vec<u8>, _>>()?.chunks(chunk_size).map(|c| c.to_vec()) {
+        let chunk = Arc::new(chunk);
+        let hash_results = Arc::clone(&hash_results);
+
+        // Spawn a new thread for each chunk to compute its hash
+        let handle = thread::spawn(move || {
+            let mut hasher = Sha256::new();
+            hasher.update(&*chunk);
+            let hash = format!("{:x}", hasher.finalize());
+
+            // Store the hash result in the shared vector
+            let mut results = hash_results.lock().unwrap();
+            results.push(hash);
+        });
+
+        handles.push(handle);
+    }
+
+    // Wait for all threads to finish
+    for handle in handles {
+        handle.join().unwrap();
+    }
+
+    // Collect and combine the intermediate hashes
+    let final_hash = {
+        let hash_results = hash_results.lock().unwrap();
+        let mut hasher = Sha256::new();
+        for hash in &*hash_results {
+            hasher.update(hash.as_bytes());
+        }
+        format!("{:x}", hasher.finalize())
+    };
+
+    Ok(final_hash)
+}
 pub fn computehash(file: &str) -> Result<String, io::Error> { // Need to change this to return result instead but its fine for testing i guess
     // Open the file
     let mut file = File::open(file).unwrap();

@@ -54,15 +54,19 @@ fn status() -> Result<(), io::Error> {
 }
 
 fn log() {
-    //template for log func
-    //println!("Commit history:");
-    //parsingops::indexparser();
-    //println!("{:?}",parsingops::indexparser());
-    parsingops::test_indextemp();
-    println!("IN LOG EXECUTED SUCCESSFULLY!");
+    // parsingops::test_indextemp();
+    // println!("IN LOG EXECUTED SUCCESSFULLY!");
+
+    let mut count = 0;
+    let mut a = scanfiles_and_ignoremt(".");
+    for i in &mut a {
+        count+=1;
+        println!("{}", i);
+    }
+    println!("Found {} files", count);
 }
 
 fn helpcom() {
-    scanfiles_and_ignore(".");
+    scanfiles_and_ignoremt(".");
     println!("Litt Usage:\nlitt <first arg> <second arg> <third arg>\nEX: litt add . OR litt add file1.c file2.c\n");
 }

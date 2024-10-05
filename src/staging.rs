@@ -1,7 +1,8 @@
 use std::{fs,fs::DirBuilder,fs::File,io::{Write, self},io::Read, borrow::{Borrow, BorrowMut}};
 use colored::Colorize;
 use sha2::{Sha256, Digest};
-use crate::{diff::find_diff_lines, file_exists, filestuff::{appendstr_to_file, compressfile, computehash, decompressfile, filetostring, littignore, scanfiles_and_ignore, search_and_destroy}, scanobjects};
+use crate::{diff::find_diff_lines, file_exists, filestuff::{appendstr_to_file, compressfile, computehash, decompressfile, filetostring, littignore, scanfiles_and_ignoremt, search_and_destroy}, scanobjects};
+use crate::filestuff::{compress_files_in_parallel};
 
 // addargs need to be changed to Vec<String> so we can process if any other files has been added like litt add main.rs main1.rs [done :D]
 pub fn add(addargs:Vec<String>) { //template for add func 
@@ -15,10 +16,12 @@ pub fn add(addargs:Vec<String>) { //template for add func
     //println!("{:?}",addargs);
 
     if addargs[0] == "." {
-        for file in scanfiles_and_ignore(".") {
-            blob(&file);
-            println!("File compressed {} :",file);
-        }
+        // for file in scanfiles_and_ignore_mt(".") {
+        //     blob(&file);
+        //     println!("File compressed {} :",file);
+        // }
+        let a = compress_files_in_parallel(scanfiles_and_ignoremt(".")).expect("TODO: panic message");
+
     }
     else {
         for file in addargs {
