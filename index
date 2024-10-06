@@ -38,5 +38,5 @@
   name = bobo.txt
 
 [checksum]
-  checksum = True
+  checksum = true
   sha1 = 1ef0972eb948e6229240668effcb9c600fe5888d

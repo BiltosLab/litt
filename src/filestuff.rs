@@ -1,17 +1,23 @@
 /*
     This file contains all the functions that do operations of files 
 */
-use std::{fs::{self, DirBuilder, File, OpenOptions},io::{self, BufRead, BufReader, BufWriter, Read, Write},path::{Path, PathBuf}};
-use colored::Colorize;
+use flate2::read::DeflateDecoder;
+use flate2::write::DeflateEncoder;
+use flate2::Compression;
+use sha2::{Digest, Sha256};
+use std::collections::{HashMap, HashSet};
 use std::sync::{Arc, Mutex};
 use std::thread;
-use sha2::{Sha256,Digest};
-use std::borrow::BorrowMut;
-use flate2::Compression;
-use flate2::write::DeflateEncoder;
-use flate2::read::DeflateDecoder;
-use std::collections::{HashMap, HashSet};
+use std::{fs::{self, DirBuilder, File, OpenOptions}, io::{self, BufRead, BufReader, BufWriter, Read, Write}, path::{Path, PathBuf}};
+use std::time::SystemTime;
+#[cfg(target_os = "windows")]
+use std::os::windows::fs::MetadataExt;
 
+#[cfg(not(target_os = "windows"))]
+use std::os::unix::fs::MetadataExt;
+use crate::parsingops::insert_new_index_entries;
+
+use crate::parsingops::IndexEntry;
 pub fn filetostring(filetoparse:&str) -> Result<Vec<String>, io::Error>{ // Function to Parse files line by line into a Vec<String>
     let mut f = File::open(filetoparse)?;
     let mut tokens:Vec<String> = vec![];
@@ -52,7 +58,7 @@ pub fn littignore() -> Result<HashSet<String>, io::Error> {
 }
 #[cfg(not(target_os = "windows"))]
 pub fn littignore() -> Result<HashSet<String>, io::Error> { 
-    let file = filetostring("./.littignore")?; 
+    let file = filetostring("./.littignore")?;
     let mut hashset_of_strings: HashSet<_> = file.into_iter().collect(); 
     hashset_of_strings.insert("/.litt".to_string());
     Ok(hashset_of_strings)
@@ -270,12 +276,97 @@ tags will be skipped till i know what they do .
 //     Ok(())
 // }
 
+#[cfg(windows)]
+fn simulate_ino(file_path: &str) -> u64 {
+    // hashing the file path to simulate inode
+    use std::hash::{Hash, Hasher};
+    let mut hasher = std::collections::hash_map::DefaultHasher::new();
+    file_path.hash(&mut hasher);
+    hasher.finish()
+}
 
-pub fn compress_files_in_parallel(file_paths: Vec<String>) -> Result<HashMap<String, String>, io::Error> {
+pub fn extract_file_info(file_path: &str) -> Result<IndexEntry, io::Error> {
+    let metadata = fs::metadata(file_path)?;
+
+    let ctime = metadata
+        .created()
+        .unwrap_or(SystemTime::now())
+        .duration_since(SystemTime::UNIX_EPOCH)
+        .unwrap()
+        .as_secs_f64();
+
+    let mtime = metadata
+        .modified()
+        .unwrap_or(SystemTime::now())
+        .duration_since(SystemTime::UNIX_EPOCH)
+        .unwrap()
+        .as_secs_f64();
+
+
+    #[cfg(unix)]
+    let dev = metadata.dev();
+    #[cfg(windows)]
+    let dev = 1;
+
+    #[cfg(unix)]
+    let ino = metadata.ino();
+    #[cfg(windows)]
+    let ino = simulate_ino(file_path);
+
+    #[cfg(unix)]
+    let mode = metadata.mode();
+    #[cfg(windows)]
+    let mode = if metadata.is_file() {
+        0o100644
+    } else if metadata.is_dir() {
+        0o040755
+    } else {
+        0
+    };
+
+    #[cfg(unix)]
+    let uid = metadata.uid();
+    #[cfg(windows)]
+    let uid = 0;
+
+    #[cfg(unix)]
+    let gid = metadata.gid();
+    #[cfg(windows)]
+    let gid = 0;
+
+    let size = metadata.len();
+
+    let sha = computehashmt(file_path)?;
+
+    let entry = IndexEntry {
+        entry_number: 1,
+        ctime,
+        mtime,
+        dev: dev as u32,
+        ino,
+        mode: mode as u32,
+        uid: uid as u32,
+        gid: gid as u32,
+        size,
+        sha,
+        flags: 9,
+        assume_valid: false,
+        extended: false,
+        stage: (false, false),
+        name: file_path.to_string(),
+    };
+
+    Ok(entry)
+}
+
+
+pub fn compress_files_in_parallel(file_paths: Vec<String> ) -> Result<(HashMap<String, String>), io::Error> {
     let mut handles = vec![];
 
     // HashMap to store file path and its computed hash
     let file_hash_map = Arc::new(Mutex::new(HashMap::new()));
+    // Vec to store IndexEntry information for each file
+    let file_info_vec = Arc::new(Mutex::new(Vec::new()));
 
     // Convert file_paths to Arc for safe multithreaded access
     let file_paths = Arc::new(file_paths);
@@ -283,6 +374,7 @@ pub fn compress_files_in_parallel(file_paths: Vec<String>) -> Result<HashMap<Str
     for inputfile in &*file_paths {
         let inputfile = inputfile.clone();
         let file_hash_map = Arc::clone(&file_hash_map); // Clone Arc for thread-safe access to the HashMap
+        let file_info_vec = Arc::clone(&file_info_vec); // Clone Arc for thread-safe access to the Vec<IndexEntry>
 
         // Spawn a new thread for each file compression task
         let handle = thread::spawn(move || {
@@ -301,6 +393,17 @@ pub fn compress_files_in_parallel(file_paths: Vec<String>) -> Result<HashMap<Str
                     } else {
                         println!("Successfully compressed {} to {}", inputfile, outputfile);
                     }
+
+                    // Extract file info and store it in the Vec<IndexEntry>
+                    match extract_file_info(&inputfile) {
+                        Ok(file_info) => {
+                            let mut file_info_vec = file_info_vec.lock().unwrap();
+                            file_info_vec.push(file_info);
+                        }
+                        Err(e) => {
+                            eprintln!("Error extracting file info for {}: {}", inputfile, e);
+                        }
+                    }
                 }
                 Err(e) => {
                     eprintln!("Error computing hash for file {}: {}", inputfile, e);
@@ -317,14 +420,25 @@ pub fn compress_files_in_parallel(file_paths: Vec<String>) -> Result<HashMap<Str
         handle.join().unwrap();
     }
 
-    // Access and print the file hash map (optional)
+    // Access and return both the file hash map and the Vec<IndexEntry>
     let final_hash_map = Arc::try_unwrap(file_hash_map)
         .unwrap()
         .into_inner()
         .unwrap();
 
+    let final_file_info_vec = Arc::try_unwrap(file_info_vec)
+        .unwrap()
+        .into_inner()
+        .unwrap();
+
+    insert_new_index_entries(final_file_info_vec);
+
+
     Ok(final_hash_map)
 }
+
+
+
 pub fn computehashmt(file: &str) -> Result<String, io::Error> {
     // Open the file
     let input_file = File::open(file)?;

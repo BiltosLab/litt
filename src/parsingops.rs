@@ -34,44 +34,46 @@ impl Default for IndexChecksum {
 }
 #[derive(Debug)]
 pub struct IndexEntry {
-    entry_number: u32,
-    ctime: f64,
-    mtime: f64,
-    dev: u32,
-    ino: u64,
-    mode: u32,
-    uid: u32,
-    gid: u32,
-    size: u64,
-    sha: String,
-    flags: u16,
-    assume_valid: bool,
-    extended: bool,
-    stage: (bool, bool),
-    name: String,
+    pub entry_number: u32,
+    pub ctime: f64,
+    pub mtime: f64,
+    pub dev: u32,
+    pub ino: u64,
+    pub mode: u32,
+    pub uid: u32,
+    pub gid: u32,
+    pub size: u64,
+    pub sha: String,
+    pub flags: u16,
+    pub assume_valid: bool,
+    pub extended: bool,
+    pub stage: (bool, bool),
+    pub name: String,
 }
 
 impl Default for IndexEntry {
-  fn default() -> Self {
-      Self {
-          entry_number: 0,
-          ctime: 0.0,
-          mtime: 0.0,
-          dev: 0,
-          ino: 0,
-          mode: 0,
-          uid: 0,
-          gid: 0,
-          size: 0,
-          sha: "".to_string(),
-          flags: 0,
-          assume_valid: false,
-          extended: false,
-          stage: (false, false),
-          name: "".to_string(),
-      }
-  }
+    fn default() -> Self {
+        Self {
+            entry_number: 0,
+            ctime: 0.0,
+            mtime: 0.0,
+            dev: 0,
+            ino: 0,
+            mode: 0,
+            uid: 0,
+            gid: 0,
+            size: 0,
+            sha: "".to_string(),
+            flags: 0,
+            assume_valid: false,
+            extended: false,
+            stage: (false, false),
+            name: "".to_string(),
+        }
+    }
 }
+
+
 
 pub fn indexparser() -> (IndexHeader,Vec<IndexEntry>,IndexChecksum){ 
   let mut entries: Vec<IndexEntry> = Vec::new(); // WE SHOULD ADD ENTRIES TO THIS AND THEN WHEN WRITING WE PUSH THIS TO THE FILE.
