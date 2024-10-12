@@ -75,7 +75,7 @@ impl Default for IndexEntry {
 
 
 
-pub fn indexparser() -> (IndexHeader,Vec<IndexEntry>,IndexChecksum){ 
+pub fn index_parser() -> (IndexHeader, Vec<IndexEntry>, IndexChecksum){
   let mut entries: Vec<IndexEntry> = Vec::new(); // WE SHOULD ADD ENTRIES TO THIS AND THEN WHEN WRITING WE PUSH THIS TO THE FILE.
   let mut indexheader:IndexHeader = Default::default();
   let mut indexchecksum:IndexChecksum = Default::default();
@@ -86,7 +86,7 @@ pub fn indexparser() -> (IndexHeader,Vec<IndexEntry>,IndexChecksum){
     let mut checksum:Vec<String> = vec![];
     if file.get(0).expect("Failed to read file") == "[header]"{
     for k in 1..4 {header.push(file.get(k).unwrap().to_string())}
-    indexheader=indexheaderparser(header).expect("Invalid");
+    indexheader=indexheaderparser(header).expect("Invalid Header");
     for mut i in 4..file.len(){
       if file.get(i).unwrap() == "[entry]"{
         i += 1;
@@ -247,6 +247,8 @@ fn indexchecksumparser(checksumh:Vec<String>) -> Result<IndexChecksum, ParseErro
 * With new hash at the end?
 */
 
+
+// THIS IS A TEST FUNCTION REMOVE AT PROD TIME
 pub fn test_indextemp () {
     let mut entries: Vec<IndexEntry> = vec![];
     let index_entry = IndexEntry {
@@ -271,7 +273,7 @@ pub fn test_indextemp () {
     println!("EXECUTED SUCCESSFULLY !")
 }
 pub fn insert_new_index_entries(newentires:Vec<IndexEntry>){
-    let (mut indexheader,mut entries,mut indexchecksum) = indexparser();
+    let (mut indexheader,mut entries,mut indexchecksum) = index_parser();
     entries.extend(newentires);
     unsigned_byte_sort_structs(&mut entries);
     stringtofile("./.litt/index",stitch_index_file(indexheader,entries,indexchecksum)).unwrap();

@@ -1,13 +1,11 @@
-use std::{fs,fs::DirBuilder,fs::File,io::{Write, self},io::Read, borrow::{Borrow, BorrowMut}};
+use crate::filestuff::{compress_files_in_parallel, computehashmt};
+use crate::{file_exists, filestuff::{compressfile, decompressfile, filetostring, scanfiles_and_ignoremt}, scan_objects};
 use colored::Colorize;
-use sha2::{Sha256, Digest};
-use crate::{diff::find_diff_lines, file_exists, filestuff::{appendstr_to_file, compressfile, computehash, decompressfile, filetostring, littignore, scanfiles_and_ignoremt, search_and_destroy}, scanobjects};
-use crate::filestuff::{compress_files_in_parallel};
+use std::borrow::Borrow;
 
-// addargs need to be changed to Vec<String> so we can process if any other files has been added like litt add main.rs main1.rs [done :D]
-pub fn add(addargs:Vec<String>) { //template for add func 
-    if !file_exists("./.litt") { // i think this will suffice 
-        println!("fatal: not a litt repository ");
+pub fn add(args:Vec<String>) { //template for add func
+    if !file_exists("./.litt") { // I think this will suffice
+        println!("{}: not a litt repository ","fatal".red());
         return;
     }
 
@@ -15,7 +13,7 @@ pub fn add(addargs:Vec<String>) { //template for add func
    
     //println!("{:?}",addargs);
 
-    if addargs[0] == "." {
+    if args[0] == "." {
         // for file in scanfiles_and_ignore_mt(".") {
         //     blob(&file);
         //     println!("File compressed {} :",file);
@@ -23,13 +21,14 @@ pub fn add(addargs:Vec<String>) { //template for add func
         let a = compress_files_in_parallel(scanfiles_and_ignoremt(".")).expect("TODO: panic message");
 
     }
+
     else {
-        for file in addargs {
+        for file in args {
             if file_exists(&file) {
                 blob(&file);
                 println!("File compressed {} :",file);}
             else {
-                println!("Path '{}' did not match any files",file);
+                println!("'{}' did not match any file",file.to_string().red());
             }
         }
     }
@@ -45,14 +44,14 @@ pub fn add(addargs:Vec<String>) { //template for add func
 
 
 pub fn blob(filename:&str){
-    let a = computehash(filename).unwrap();
+    let a = computehashmt(filename).unwrap();
     compressfile(filename, ("./.litt/objects/".to_owned()+&a).as_str()).unwrap();
 
 }
 
 
 pub fn catfile(hashoffile:&str){
-    let obj=scanobjects(hashoffile);
+    let obj= scan_objects(hashoffile);
     println!("{}",obj);
     decompressfile(&obj, "./.litt/tempf").unwrap();
     println!("{}",filetostring("./.litt/tempf").unwrap().join("\n").blue());

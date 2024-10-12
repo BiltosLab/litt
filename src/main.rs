@@ -4,7 +4,7 @@ use std::{env, fs, io, process::exit};
 mod commits;
 mod diff;
 mod filestuff;
-mod littinit;
+mod init;
 mod parsingops;
 mod staging;
 // figure out how to use env variables to store email,name of the commiter much easier than the other one i was thinking about
@@ -17,7 +17,7 @@ fn main() -> Result<(), io::Error> {
     }
     let cmd = &args[1];
     match cmd.as_str() {
-        "init" => littinit::init(),
+        "init" => init::init(),
         "add" => {
             if args.len() < 3 {
                 println!("ERROR! No args provided for add.");

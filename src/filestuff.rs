@@ -205,7 +205,7 @@ pub fn scanfiles_and_ignoremt(realpath: &str) -> Vec<String> {
     filelist
 }
 
-pub fn scanobjects(hash:&str) -> String { 
+pub fn scan_objects(hash:&str) -> String {
     if let Ok(dirf) = fs::read_dir("./.litt/objects")
     {
         for path in dirf{
@@ -230,7 +230,7 @@ pub fn scanobjects(hash:&str) -> String {
     }
 
 
-    return "no".to_string();
+    "no".to_string()
 }
 
 
@@ -244,41 +244,9 @@ tags will be skipped till i know what they do .
 
 */
 
-// pub fn compress_files_in_parallel(file_paths: Vec<String>) -> std::io::Result<()> {
-//     let mut handles = vec![];
-//
-//     // Convert file_paths to Arc for safe multithreaded access (if needed)
-//     let file_paths = Arc::new(file_paths);
-//
-//     for inputfile in &*file_paths {
-//         let inputfile = inputfile.clone();
-//         // Use the calculatehash function to determine the output file name
-//         let outputfile = computehashmt(&inputfile)?;
-//         // compressfile(filename, ("./.litt/objects/".to_owned()+&a).as_str()).unwrap();
-//         // Spawn a new thread for each file compression task
-//         let handle = thread::spawn(move || {
-//             if let Err(e) = compressfile(&inputfile, ("./.litt/objects/".to_owned()+&outputfile).as_str()) {
-//                 eprintln!("Error compressing file {}: {}", inputfile, e);
-//             } else {
-//                 println!("Successfully compressed {} to {}", inputfile, outputfile);
-//             }
-//         });
-//
-//         // Push the thread handle into the vector
-//         handles.push(handle);
-//     }
-//
-//     // Wait for all threads to finish
-//     for handle in handles {
-//         handle.join().unwrap();
-//     }
-//
-//     Ok(())
-// }
 
 #[cfg(windows)]
 fn simulate_ino(file_path: &str) -> u64 {
-    // hashing the file path to simulate inode
     use std::hash::{Hash, Hasher};
     let mut hasher = std::collections::hash_map::DefaultHasher::new();
     file_path.hash(&mut hasher);
@@ -363,38 +331,32 @@ pub fn extract_file_info(file_path: &str) -> Result<IndexEntry, io::Error> {
 pub fn compress_files_in_parallel(file_paths: Vec<String> ) -> Result<(HashMap<String, String>), io::Error> {
     let mut handles = vec![];
 
-    // HashMap to store file path and its computed hash
     let file_hash_map = Arc::new(Mutex::new(HashMap::new()));
-    // Vec to store IndexEntry information for each file
     let file_info_vec = Arc::new(Mutex::new(Vec::new()));
 
-    // Convert file_paths to Arc for safe multithreaded access
     let file_paths = Arc::new(file_paths);
 
     for inputfile in &*file_paths {
         let inputfile = inputfile.clone();
-        let file_hash_map = Arc::clone(&file_hash_map); // Clone Arc for thread-safe access to the HashMap
-        let file_info_vec = Arc::clone(&file_info_vec); // Clone Arc for thread-safe access to the Vec<IndexEntry>
+        let file_hash_map = Arc::clone(&file_hash_map);
+        let file_info_vec = Arc::clone(&file_info_vec);
 
-        // Spawn a new thread for each file compression task
         let handle = thread::spawn(move || {
-            // Calculate the hash of the file
             match computehashmt(&inputfile) {
                 Ok(outputfile) => {
-                    // Add the file path and its computed hash to the HashMap
                     {
                         let mut hash_map = file_hash_map.lock().unwrap();
                         hash_map.insert(outputfile.clone(), inputfile.clone());
                     }
 
-                    // Compress the file with the hash as part of the output file path
+
                     if let Err(e) = compressfile(&inputfile, &("./.litt/objects/".to_owned() + &outputfile)) {
                         eprintln!("Error compressing file {}: {}", inputfile, e);
                     } else {
                         println!("Successfully compressed {} to {}", inputfile, outputfile);
                     }
 
-                    // Extract file info and store it in the Vec<IndexEntry>
+
                     match extract_file_info(&inputfile) {
                         Ok(file_info) => {
                             let mut file_info_vec = file_info_vec.lock().unwrap();
@@ -411,16 +373,13 @@ pub fn compress_files_in_parallel(file_paths: Vec<String> ) -> Result<(HashMap<S
             }
         });
 
-        // Push the thread handle into the vector
         handles.push(handle);
     }
 
-    // Wait for all threads to finish
     for handle in handles {
         handle.join().unwrap();
     }
 
-    // Access and return both the file hash map and the Vec<IndexEntry>
     let final_hash_map = Arc::try_unwrap(file_hash_map)
         .unwrap()
         .into_inner()
@@ -440,29 +399,23 @@ pub fn compress_files_in_parallel(file_paths: Vec<String> ) -> Result<(HashMap<S
 
 
 pub fn computehashmt(file: &str) -> Result<String, io::Error> {
-    // Open the file
     let input_file = File::open(file)?;
     let reader = BufReader::new(input_file);
 
-    // Buffer size and chunking parameters
     let chunk_size = 4096; // 4KB chunks
     let mut handles = vec![];
 
-    // Shared vector for storing intermediate hash results
     let hash_results = Arc::new(Mutex::new(vec![]));
 
-    // Iterate over the file in chunks
     for chunk in reader.bytes().collect::<Result<Vec<u8>, _>>()?.chunks(chunk_size).map(|c| c.to_vec()) {
         let chunk = Arc::new(chunk);
         let hash_results = Arc::clone(&hash_results);
 
-        // Spawn a new thread for each chunk to compute its hash
         let handle = thread::spawn(move || {
             let mut hasher = Sha256::new();
             hasher.update(&*chunk);
             let hash = format!("{:x}", hasher.finalize());
 
-            // Store the hash result in the shared vector
             let mut results = hash_results.lock().unwrap();
             results.push(hash);
         });
@@ -470,12 +423,10 @@ pub fn computehashmt(file: &str) -> Result<String, io::Error> {
         handles.push(handle);
     }
 
-    // Wait for all threads to finish
     for handle in handles {
         handle.join().unwrap();
     }
 
-    // Collect and combine the intermediate hashes
     let final_hash = {
         let hash_results = hash_results.lock().unwrap();
         let mut hasher = Sha256::new();
@@ -486,27 +437,6 @@ pub fn computehashmt(file: &str) -> Result<String, io::Error> {
     };
 
     Ok(final_hash)
-}
-pub fn computehash(file: &str) -> Result<String, io::Error> { // Need to change this to return result instead but its fine for testing i guess
-    // Open the file
-    let mut file = File::open(file).unwrap();
-
-    // Create a SHA-256 "hasher"
-    let mut hasher = Sha256::new(); // Rust analyzer thinks this's an error or something just ignore.
-
-    // Read the file in 4KB chunks and feed them to the hasher
-    let mut buffer = [0; 4096];
-    loop {
-        let bytes_read = file.read(&mut buffer).unwrap();
-        if bytes_read == 0 {
-            break;
-        }
-        hasher.update(&buffer[..bytes_read]);
-    }
-    
-    // Finalize the hash and get the result as a byte array
-    let result = format!("{:x}", hasher.finalize());
-    Ok(result)
 }
 
 pub fn compute_vec_hash(content: &Vec<String>) -> String {

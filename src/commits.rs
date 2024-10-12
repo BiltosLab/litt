@@ -1,11 +1,6 @@
-/*
- * LITT - Version Control System
- *
- * Copyright (C) Laith Bilto, 2024
- */
 use std::{fs::{File, self},io::{BufRead, self, Write},io::Read};
 
-use crate::filestuff::{filetostring, stringtofile, appendstr_to_file, scanfiles_and_ignoremt, computehash, littignore};
+use crate::filestuff::{filetostring, stringtofile, appendstr_to_file, scanfiles_and_ignoremt,littignore, computehashmt};
 use crate::staging::{add};
 
 pub fn commit() {
@@ -34,7 +29,7 @@ pub fn diff_loader(){ // .littignore needed.
     let trackedfilelist:Vec<String> = scanfiles_and_ignoremt(".");
     
     for file in trackedfilelist{
-        if let Err(err) = appendstr_to_file(&commitfile,format!("{}\t{}",file,computehash(&file).unwrap())) {
+        if let Err(err) = appendstr_to_file(&commitfile,format!("{}\t{}",file,computehashmt(&file).unwrap())) {
             eprintln!("Error {}",err)
         }
     }
