@@ -276,7 +276,7 @@ pub fn insert_new_index_entries(newentires:Vec<IndexEntry>){
     let (mut indexheader,mut entries,mut indexchecksum) = index_parser();
     entries.extend(newentires);
     unsigned_byte_sort_structs(&mut entries);
-    stringtofile("./.litt/index",stitch_index_file(indexheader,entries,indexchecksum)).unwrap();
+    stringtofile("./.litt/index",stitch_index_file(indexheader,entries,indexchecksum)).expect("INDEX FILE CORRUPTION!");
 
 
 

@@ -8,24 +8,14 @@ pub fn add(args:Vec<String>) { //template for add func
         println!("{}: not a litt repository ","fatal".red());
         return;
     }
-
-    //let objdir = "./.litt/objects/";    
-   
-    //println!("{:?}",addargs);
-
     if args[0] == "." {
-        // for file in scanfiles_and_ignore_mt(".") {
-        //     blob(&file);
-        //     println!("File compressed {} :",file);
-        // }
         let a = compress_files_in_parallel(scanfiles_and_ignoremt(".")).expect("TODO: panic message");
 
     }
-
-    else {
-        for file in args {
+    else { // IDK if this needs to be multithreaded too because the user prob will enter the names of like 5 or 6 files max ?
+        for file in args { // DO NOT USE THIS NOW! // TODO
             if file_exists(&file) {
-                blob(&file);
+                blob(&file); // This needs to be changed to add file to index
                 println!("File compressed {} :",file);}
             else {
                 println!("'{}' did not match any file",file.to_string().red());

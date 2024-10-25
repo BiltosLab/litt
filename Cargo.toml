@@ -8,5 +8,5 @@ edition = "2021"
 [dependencies]
 colored = "2.1.0"
 sha2 = "0.10.8"
-flate2 = "1.0.28"
-chrono = "0.4.34"
+flate2 = "1.0.34"
+chrono = "0.4.38"
