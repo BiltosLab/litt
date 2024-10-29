@@ -1,6 +1,6 @@
-use std::{collections::HashSet, vec};
+use std::{collections::HashSet, time::{SystemTime, UNIX_EPOCH}, vec};
 use colored::Colorize;
-
+use chrono::offset::Local;
 use crate::{
     fileops::{self, compute_vec_hash, split_path, stringtofile},
     parsingops::{self, IndexEntry},
@@ -29,6 +29,7 @@ pub fn commit() {
     let root_hash = compute_vec_hash(&root_tree_object);
     let _ = stringtofile(format!("./.litt/objects/{}", root_hash).as_str(), root_tree_object);
     println!("TREE OBJ ROOT LOCATED IN {}", root_hash);
+    commit_object("HI", true, root_hash,"".to_string());
 }
 
 fn tree_object(dir: &str, entries: &[IndexEntry], added_dirs: &mut HashSet<String>) -> String {
@@ -60,3 +61,42 @@ fn tree_object(dir: &str, entries: &[IndexEntry], added_dirs: &mut HashSet<Strin
         "".to_string()
     }
 }
+
+
+
+
+fn commit_object(message:&str,first:bool,sha_root:String,sha_parent:String){
+    let author = "Laith Shishani"; // we will change this to fetch from a config file but just a test for now
+    let email = "mrlaith44@gmail.com"; // we will change this to fetch from a config file but just a test for now
+    let mut commit:Vec<String> = Vec::new();
+    let current_branch = "master";
+    commit.push(format!("tree <{}>",sha_root));
+    if !first{
+        commit.push(format!("parent <{}>",sha_parent));
+    }
+    commit.push(format!("author {} <{}> {} {}",author,email,SystemTime::now().duration_since(SystemTime::UNIX_EPOCH).expect("Time went backwards?").as_secs(),Local::now().format("%z")));
+    commit.push(message.to_string());
+    println!("{:#?}",commit);
+    let hashof = compute_vec_hash(&commit);
+    let _ = stringtofile(format!("./.litt/objects/{}", &hashof).as_str(), commit);
+    let _ = stringtofile(format!("./.litt/refs/heads/{}", current_branch).as_str(), vec![hashof.clone()]);
+
+    
+    
+    
+    println!("Commited successfully! Hash: {}",hashof);
+
+}
+
+
+
+/*
+tree <SHA-1 of root tree>
+parent <SHA-1 of previous commit>  # only if this is not the first commit
+author John Doe <johndoe@example.com> 1729864922 +0200
+committer John Doe <johndoe@example.com> 1729864922 +0200
+
+Initial commit
+
+*/
+
