@@ -1,8 +1,8 @@
 use core::panic;
 use std::{cmp::Ordering, ops::Index, string::ParseError};
 use std::fmt::format;
-use crate::{filetostring, filestuff::stringtofile};
-use crate::filestuff::compute_vec_hash;
+use crate::{filetostring, fileops::stringtofile};
+use crate::fileops::compute_vec_hash;
 
 #[derive(Debug)]
 pub struct IndexHeader {
@@ -33,6 +33,7 @@ impl Default for IndexChecksum {
     }
 }
 #[derive(Debug)]
+#[derive(Clone)]
 pub struct IndexEntry {
     pub entry_number: u32,
     pub ctime: f64,
@@ -98,6 +99,7 @@ pub fn index_parser() -> (IndexHeader, Vec<IndexEntry>, IndexChecksum){
         i += 15; // Testing
         entries.push(indexentryparser(entry.clone()).unwrap());
       }
+        else { continue }
       if file.get(i).unwrap() == "[checksum]"{
         i +=1;
         for i in i..file.len(){checksum.push(file.get(i).unwrap().to_string());}
@@ -119,7 +121,7 @@ pub fn index_parser() -> (IndexHeader, Vec<IndexEntry>, IndexChecksum){
 
 }
 
-fn indexentryparser(entrystr:Vec<String>) -> Result<IndexEntry, ParseError> {
+pub fn indexentryparser(entrystr:Vec<String>) -> Result<IndexEntry, ParseError> {
   let mut entry:IndexEntry = Default::default();
       for line in entrystr {
         let parts: Vec<&str> = line.splitn(2, '=').collect();

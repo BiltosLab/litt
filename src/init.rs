@@ -1,4 +1,4 @@
-use crate::filestuff::*;
+use crate::fileops::*;
 
 
 // I think this is mostly complete now just need the mkdir/touch mode to hide files
@@ -12,23 +12,6 @@ pub fn init() {
         "  signature = DIRC".to_string(),
         "  version = 1".to_string(),
         "  entries = 1".to_string(),
-        "".to_string(),
-        "[entry]".to_string(),
-        "  entry = 1".to_string(),
-        "  ctime = 0.0".to_string(),
-        "  mtime = 0.0".to_string(),
-        "  dev = 16777217".to_string(),
-        "  ino = 1154043".to_string(),
-        "  mode = 100644".to_string(),
-        "  uid = 0".to_string(),
-        "  gid = 0".to_string(),
-        "  size = 0".to_string(),
-        "  sha1 = d5f7fc3f74f7dec08280f370a975b112e8f60818".to_string(),
-        "  flags = 0".to_string(),
-        "  assume-valid = false".to_string(),
-        "  extended = false".to_string(),
-        "  stage = false,false".to_string(),
-        "  name = 0".to_string(),
         "".to_string(),
         "[checksum]".to_string(),
         "  checksum = true".to_string(),

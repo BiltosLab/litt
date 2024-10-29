@@ -6,6 +6,7 @@ use flate2::write::DeflateEncoder;
 use flate2::Compression;
 use sha2::{Digest, Sha256};
 use std::collections::{HashMap, HashSet};
+use std::path::MAIN_SEPARATOR;
 use std::sync::{Arc, Mutex};
 use std::thread;
 use std::{fs::{self, DirBuilder, File, OpenOptions}, io::{self, BufRead, BufReader, BufWriter, Read, Write}, path::{Path, PathBuf}};
@@ -15,6 +16,7 @@ use std::os::windows::fs::MetadataExt;
 
 #[cfg(not(target_os = "windows"))]
 use std::os::unix::fs::MetadataExt;
+use colored::Colorize;
 use crate::parsingops::insert_new_index_entries;
 
 use crate::parsingops::IndexEntry;
@@ -253,7 +255,7 @@ fn simulate_ino(file_path: &str) -> u64 {
     hasher.finish()
 }
 
-pub fn extract_file_info(file_path: &str) -> Result<IndexEntry, io::Error> {
+pub fn extract_file_info(file_path: &str, sha: String) -> Result<IndexEntry, io::Error> {
     let metadata = fs::metadata(file_path)?;
 
     let ctime = metadata
@@ -269,7 +271,6 @@ pub fn extract_file_info(file_path: &str) -> Result<IndexEntry, io::Error> {
         .duration_since(SystemTime::UNIX_EPOCH)
         .unwrap()
         .as_secs_f64();
-
 
     #[cfg(unix)]
     let dev = metadata.dev();
@@ -304,8 +305,6 @@ pub fn extract_file_info(file_path: &str) -> Result<IndexEntry, io::Error> {
 
     let size = metadata.len();
 
-    let sha = computehashmt(file_path)?;
-
     let entry = IndexEntry {
         entry_number: 1,
         ctime,
@@ -316,7 +315,7 @@ pub fn extract_file_info(file_path: &str) -> Result<IndexEntry, io::Error> {
         uid: uid as u32,
         gid: gid as u32,
         size,
-        sha,
+        sha, // Use the hash provided as a parameter
         flags: 9,
         assume_valid: false,
         extended: false,
@@ -327,8 +326,9 @@ pub fn extract_file_info(file_path: &str) -> Result<IndexEntry, io::Error> {
     Ok(entry)
 }
 
-
-pub fn compress_files_in_parallel(file_paths: Vec<String> ) -> Result<(HashMap<String, String>), io::Error> {
+pub fn compress_files_in_parallel(
+    file_paths: Vec<String>
+) -> Result<(HashMap<String, String>), io::Error> {
     let mut handles = vec![];
 
     let file_hash_map = Arc::new(Mutex::new(HashMap::new()));
@@ -349,15 +349,14 @@ pub fn compress_files_in_parallel(file_paths: Vec<String> ) -> Result<(HashMap<S
                         hash_map.insert(outputfile.clone(), inputfile.clone());
                     }
 
-
                     if let Err(e) = compressfile(&inputfile, &("./.litt/objects/".to_owned() + &outputfile)) {
                         eprintln!("Error compressing file {}: {}", inputfile, e);
                     } else {
                         println!("Successfully compressed {} to {}", inputfile, outputfile);
                     }
 
-
-                    match extract_file_info(&inputfile) {
+                    // Pass the computed hash to `extract_file_info`
+                    match extract_file_info(&inputfile, outputfile.clone()) {
                         Ok(file_info) => {
                             let mut file_info_vec = file_info_vec.lock().unwrap();
                             file_info_vec.push(file_info);
@@ -389,13 +388,19 @@ pub fn compress_files_in_parallel(file_paths: Vec<String> ) -> Result<(HashMap<S
         .unwrap()
         .into_inner()
         .unwrap();
+    // DEBUG
+    for i in &final_file_info_vec {
+        println!("FILEINFOVEC {:#?}", i);
+    }
+
+    for i in &final_hash_map {
+        println!("HASHMAP{:#?}", i);
+    }
 
     insert_new_index_entries(final_file_info_vec);
 
-
     Ok(final_hash_map)
 }
-
 
 
 pub fn computehashmt(file: &str) -> Result<String, io::Error> {
@@ -509,3 +514,28 @@ pub fn file_exists(file_path: &str) -> bool {
     let path = Path::new(file_path);
     path.exists()
 }
+
+
+pub fn blob(filename:&str){
+    let a = computehashmt(filename).unwrap();
+    compressfile(filename, ("./.litt/objects/".to_owned()+&a).as_str()).unwrap();
+
+}
+
+
+pub fn catfile(hashoffile:&str){
+    let obj= scan_objects(hashoffile);
+    println!("{}",obj);
+    decompressfile(&obj, "./.litt/tempf").unwrap();
+    println!("{}",filetostring("./.litt/tempf").unwrap().join("\n").blue());
+
+}
+
+
+
+pub fn split_path(path: &str) -> Vec<&str> {
+    path.split(MAIN_SEPARATOR).collect()
+}
+
+
+

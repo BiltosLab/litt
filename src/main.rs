@@ -1,9 +1,9 @@
-use crate::{filestuff::*, staging::catfile};
+use crate::{fileops::*};
 use colored::*;
 use std::{env, fs, io, process::exit};
 mod commits;
 mod diff;
-mod filestuff;
+mod fileops;
 mod init;
 mod parsingops;
 mod staging;

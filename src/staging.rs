@@ -1,20 +1,28 @@
-use crate::filestuff::{compress_files_in_parallel, computehashmt};
-use crate::{file_exists, filestuff::{compressfile, decompressfile, filetostring, scanfiles_and_ignoremt}, scan_objects};
+use crate::fileops::{blob, compress_files_in_parallel};
+use crate::{file_exists, fileops::scanfiles_and_ignoremt};
 use colored::Colorize;
 use std::borrow::Borrow;
 
-pub fn add(args:Vec<String>) { //template for add func
+pub fn add(args:Vec<String>) {
     if !file_exists("./.litt") { // I think this will suffice
         println!("{}: not a litt repository ","fatal".red());
         return;
     }
     if args[0] == "." {
-        let a = compress_files_in_parallel(scanfiles_and_ignoremt(".")).expect("TODO: panic message");
+        let result = compress_files_in_parallel(scanfiles_and_ignoremt(".")).expect("TODO: panic staging.rs L12");
+        println!("{} LLLL",result.get("738b83cfd82a5e5e8bd86ea31cd36adb53c7d102fdf67ec84a0f2bc31cdf9ff8").unwrap().to_string());
+        //79084877629677394630c63b1af455110ce8e9180670217dbeb1071482800736
+        // for i in result {
+        //     println!("{} This is HashMap 0 - -",i.0);
+        //     println!("{} This is HashMap 1 - -",i.1);
+        // }
+
 
     }
     else { // IDK if this needs to be multithreaded too because the user prob will enter the names of like 5 or 6 files max ?
         for file in args { // DO NOT USE THIS NOW! // TODO
             if file_exists(&file) {
+                println!("{}", "Incomplete Feature use the . instead!!".red());
                 blob(&file); // This needs to be changed to add file to index
                 println!("File compressed {} :",file);}
             else {
@@ -22,28 +30,9 @@ pub fn add(args:Vec<String>) { //template for add func
             }
         }
     }
- 
-    // Change Code to include each file compressed in "staging area"
-    println!("ok here i did litt cat and first few letters in the commit hash so lets decompress then ill see what i can do");
-    println!("Added changes to the staging area.");
-
 }
 
 
 
 
 
-pub fn blob(filename:&str){
-    let a = computehashmt(filename).unwrap();
-    compressfile(filename, ("./.litt/objects/".to_owned()+&a).as_str()).unwrap();
-
-}
-
-
-pub fn catfile(hashoffile:&str){
-    let obj= scan_objects(hashoffile);
-    println!("{}",obj);
-    decompressfile(&obj, "./.litt/tempf").unwrap();
-    println!("{}",filetostring("./.litt/tempf").unwrap().join("\n").blue());
-
-}
