@@ -1,10 +1,10 @@
-use std::{collections::{HashMap, HashSet}, time::{SystemTime, UNIX_EPOCH}, vec};
+use std::{collections::{HashMap, HashSet}, fs, path::PathBuf, time::{SystemTime, UNIX_EPOCH}, vec};
 use colored::Colorize;
 use chrono::offset::Local;
 use crate::{
     fileops::{self, compute_vec_hash, split_path, stringtofile}, filetostring, parsingops::{self, IndexEntry}
 };
-
+#[derive(Clone)]
 #[derive(Debug)]
 struct treeobj {
     entry_type: String,
@@ -107,16 +107,38 @@ Initial commit
 
 */
 
-pub fn walk_commit(){
+
+// Extract the commit to a folder for now
+pub fn checkout_commit() {
     let head = filetostring("./.litt/refs/heads/master").unwrap();
     let data = parse_commit_data(head[0].clone()).unwrap();
-    println!("{:#?}",data.get("tree").unwrap());
-    // let roottree = filetostring(&format!("./.litt/objects/{}",data.get("tree").unwrap()));
-    let tree_entries =parse_entries(data.get("tree").unwrap().to_string());
-    println!("{:#?}",tree_entries);
+    let root_tree_hash = data.get("tree").unwrap().to_string();
+    
+    let root_path = PathBuf::from("./COMMIT");
+    let _ = fs::create_dir_all(&root_path); 
 
+    // Begin recursive tree walking
+    treewalker(root_tree_hash, root_path);
 }
 
+fn treewalker(tree_hash: String, current_path: PathBuf) {
+    let tree_entries = parse_tree_object(tree_hash);
+
+    for entry in tree_entries {
+        let entry_path = current_path.join(&entry.name);
+
+        if entry.entry_type == "blob" {
+            println!("Created file: {:?}", entry_path);
+
+            fileops::decompressfile(&format!("./.litt/objects/{}", entry.hash), entry_path.to_str().unwrap()).unwrap();
+        } else if entry.entry_type == "tree" {
+
+            fileops::mkdir(entry_path.to_str().unwrap());
+            println!("Created directory: {:?}", entry_path);
+            treewalker(entry.hash, entry_path);
+        }
+    }
+}
 
 fn parse_commit_data(hash:String) -> Result<HashMap<String, String>, &'static str> {
     let mut parsed_data = HashMap::new();
@@ -172,7 +194,7 @@ fn parse_commit_data(hash:String) -> Result<HashMap<String, String>, &'static st
 
 
 
-fn parse_entries(hash:String) -> Vec<treeobj> {
+fn parse_tree_object(hash:String) -> Vec<treeobj> {
     let mut entries = Vec::new();
     let lines = filetostring(&format!("./.litt/objects/{}",hash)).unwrap();
 

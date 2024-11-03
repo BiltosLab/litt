@@ -34,6 +34,7 @@ pub fn filetostring(filetoparse:&str) -> Result<Vec<String>, io::Error>{
     let file = filetostring("./.littignore")?;
     Ok(file)
 }*/
+
 fn path_fix(path: String) -> String {
     let mut path = path;
 

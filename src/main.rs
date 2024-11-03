@@ -37,6 +37,9 @@ fn main() -> Result<(), io::Error> {
             if args[2].len() >= 7 {
                 catfile(&args[2]);
             }
+        },
+        "checkout" => {
+            commits::checkout_commit();
         }
         _ => println!("Unknown command: {}", cmd),
     }
@@ -47,18 +50,17 @@ fn main() -> Result<(), io::Error> {
 
 fn status() -> Result<(), io::Error> {
     //template for status func
-    let original_lines = filetostring("./src/main.rs")?; // Just a note here : This original lines Vec<String> will get fetched from the database file using the commit number and our current files will get compared to it
-    let modified_lines = filetostring("./src/main1.rs")?; //adbasdds
-    let linediff = diff::find_diff_lines(original_lines, modified_lines);
-    println!("Modified Lines Test:\n{}", linediff.join("\n"));
+    // let original_lines = filetostring("./src/main.rs")?; // Just a note here : This original lines Vec<String> will get fetched from the database file using the commit number and our current files will get compared to it
+    // let modified_lines = filetostring("./src/main1.rs")?; //adbasdds
+    // let linediff = diff::find_diff_lines(original_lines, modified_lines);
+    // println!("Modified Lines Test:\n{}", linediff.join("\n"));
     
-    //commits::walk_commit();
+    
     Ok(())
 }
 
 
 
 fn helpcom() {
-    scanfiles_and_ignoremt(".");
     println!("Litt Usage:\nlitt <first arg> <second arg> <third arg>\nEX: litt add . OR litt add file1.c file2.c\n");
 }
