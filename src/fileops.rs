@@ -332,7 +332,7 @@ pub fn extract_file_info(file_path: &str, sha: String) -> Result<IndexEntry, io:
 
 pub fn compress_files_in_parallel(
     file_paths: Vec<String>
-) -> Result<(HashMap<String, String>), io::Error> {
+) -> Result<(HashMap<String, String>,Vec<IndexEntry>), io::Error> {
     let mut handles = vec![];
 
     let file_hash_map = Arc::new(Mutex::new(HashMap::new()));
@@ -408,9 +408,9 @@ pub fn compress_files_in_parallel(
 
     let _ = stringtofile("FILEDEBUG.txt", temp_vec);
 
-    insert_new_index_entries(final_file_info_vec);
+    insert_new_index_entries(final_file_info_vec.clone());
 
-    Ok(final_hash_map)
+    Ok((final_hash_map,final_file_info_vec))
 }
 
 

@@ -10,7 +10,6 @@ pub fn add(args:Vec<String>) {
     }
     if args[0] == "." {
         let result = compress_files_in_parallel(scanfiles_and_ignoremt(".")).expect("TODO: panic staging.rs L12");
-        println!("{} LLLL",result.get("738b83cfd82a5e5e8bd86ea31cd36adb53c7d102fdf67ec84a0f2bc31cdf9ff8").unwrap().to_string());
         //79084877629677394630c63b1af455110ce8e9180670217dbeb1071482800736
         // for i in result {
         //     println!("{} This is HashMap 0 - -",i.0);

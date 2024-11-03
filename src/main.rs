@@ -47,10 +47,11 @@ fn main() -> Result<(), io::Error> {
 
 fn status() -> Result<(), io::Error> {
     //template for status func
-    let original_lines = filetostring("./src/main.rs")?; // Just a note here : This original lines Vec<String> will get fetched from the database file using the commit number and our current files will get compared to it
-    let modified_lines = filetostring("./src/main1.rs")?; //adbasdds
-    let linediff = diff::find_diff_lines(original_lines, modified_lines);
-    println!("Modified Lines Test:\n{}", linediff.join("\n"));
+    // let original_lines = filetostring("./src/main.rs")?; // Just a note here : This original lines Vec<String> will get fetched from the database file using the commit number and our current files will get compared to it
+    // let modified_lines = filetostring("./src/main1.rs")?; //adbasdds
+    // let linediff = diff::find_diff_lines(original_lines, modified_lines);
+    // println!("Modified Lines Test:\n{}", linediff.join("\n"));
+    commits::walk_commit();
     Ok(())
 }
 

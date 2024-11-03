@@ -1,10 +1,17 @@
-use std::{collections::HashSet, time::{SystemTime, UNIX_EPOCH}, vec};
+use std::{collections::{HashMap, HashSet}, time::{SystemTime, UNIX_EPOCH}, vec};
 use colored::Colorize;
 use chrono::offset::Local;
 use crate::{
-    fileops::{self, compute_vec_hash, split_path, stringtofile},
-    parsingops::{self, IndexEntry},
+    fileops::{self, compute_vec_hash, split_path, stringtofile}, filetostring, parsingops::{self, IndexEntry}
 };
+
+#[derive(Debug)]
+struct treeobj {
+    entry_type: String,
+    hash: String,
+    name: String,
+}
+
 
 pub fn commit() {
     let (_index, indexentries, _indcheck) = parsingops::index_parser();
@@ -100,3 +107,86 @@ Initial commit
 
 */
 
+pub fn walk_commit(){
+    let head = filetostring("./.litt/refs/heads/master").unwrap();
+    let data = parse_commit_data(head[0].clone()).unwrap();
+    println!("{:#?}",data.get("tree").unwrap());
+    // let roottree = filetostring(&format!("./.litt/objects/{}",data.get("tree").unwrap()));
+    let tree_entries =parse_entries(data.get("tree").unwrap().to_string());
+    println!("{:#?}",tree_entries);
+
+}
+
+
+fn parse_commit_data(hash:String) -> Result<HashMap<String, String>, &'static str> {
+    let mut parsed_data = HashMap::new();
+    let lines = filetostring(&format!("./.litt/objects/{}",hash)).unwrap();
+    for line in lines {
+        if line.starts_with("tree") {
+            // Extract the tree hash
+            if let Some(hash) = line.split_whitespace().nth(1) {
+                parsed_data.insert("tree".to_string(), hash.trim_matches('<').trim_matches('>').to_string());
+            }
+        } else if line.starts_with("parent") {
+            // Extract the parent hash
+            if let Some(hash) = line.split_whitespace().nth(1) {
+                parsed_data.insert("parent".to_string(), hash.trim_matches('<').trim_matches('>').to_string());
+            }
+        } else if line.starts_with("author") {
+            // Extract author information: name, email, timestamp, timezone
+            let parts: Vec<&str> = line.split_whitespace().collect();
+            if parts.len() >= 6 {
+                // Extract name and email within "<>"
+                let mut name = String::new();
+                let mut email = String::new();
+                for part in &parts[1..] {
+                    if part.starts_with('<') && part.ends_with('>') {
+                        email = part.trim_matches('<').trim_matches('>').to_string();
+                        break;
+                    } else {
+                        name.push_str(part);
+                        name.push(' ');
+                    }
+                }
+                name = name.trim().to_string();
+
+                // Extract timestamp and timezone
+                let timestamp = parts[parts.len() - 2];
+                let timezone = parts[parts.len() - 1];
+
+                parsed_data.insert("author_name".to_string(), name);
+                parsed_data.insert("author_email".to_string(), email);
+                parsed_data.insert("commit_time".to_string(), timestamp.to_string());
+                parsed_data.insert("timezone".to_string(), timezone.to_string());
+            }
+        }
+    }
+
+    if parsed_data.is_empty() {
+        Err("No data found in input")
+    } else {
+        Ok(parsed_data)
+    }
+}
+
+
+
+
+fn parse_entries(hash:String) -> Vec<treeobj> {
+    let mut entries = Vec::new();
+    let lines = filetostring(&format!("./.litt/objects/{}",hash)).unwrap();
+
+    for line in lines {
+        let parts: Vec<&str> = line.split_whitespace().collect();
+        if parts.len() == 3 {
+            let entry = treeobj {
+                entry_type: parts[0].to_string(),
+                hash: parts[1].to_string(),
+                name: parts[2].to_string(),
+            };
+            entries.push(entry);
+        }
+    }
+
+    entries
+}
