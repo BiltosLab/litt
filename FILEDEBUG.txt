@@ -1,0 +1,481 @@
+IndexEntry {
+    entry_number: 1,
+    ctime: 1730603028.610612,
+    mtime: 1730603028.610612,
+    dev: 2080,
+    ino: 160080,
+    mode: 33188,
+    uid: 1000,
+    gid: 1000,
+    size: 167,
+    sha: "f7ba9e52f5ec9871d3073f75f6ed44be0e0fe69df9099654db90e0cf54cd6607",
+    flags: 9,
+    assume_valid: false,
+    extended: false,
+    stage: (
+        false,
+        false,
+    ),
+    name: "./.idea/vcs.xml",
+}
+IndexEntry {
+    entry_number: 1,
+    ctime: 1730603028.610612,
+    mtime: 1730603028.610612,
+    dev: 2080,
+    ino: 160079,
+    mode: 33188,
+    uid: 1000,
+    gid: 1000,
+    size: 260,
+    sha: "e0d1ea25d01d437da32e24dfb06ae7f7f7e4042b2dc32350e647a12c71f807c1",
+    flags: 9,
+    assume_valid: false,
+    extended: false,
+    stage: (
+        false,
+        false,
+    ),
+    name: "./.idea/modules.xml",
+}
+IndexEntry {
+    entry_number: 1,
+    ctime: 1730603028.610612,
+    mtime: 1730603028.610612,
+    dev: 2080,
+    ino: 160085,
+    mode: 33261,
+    uid: 1000,
+    gid: 1000,
+    size: 27,
+    sha: "344b5e678cb52dadfe3561f63966fb2b3d9b1f9ecebd6a098a748ffe0010e366",
+    flags: 9,
+    assume_valid: false,
+    extended: false,
+    stage: (
+        false,
+        false,
+    ),
+    name: "./litt_test.sh",
+}
+IndexEntry {
+    entry_number: 1,
+    ctime: 1730603028.610612,
+    mtime: 1730603028.610612,
+    dev: 2080,
+    ino: 160084,
+    mode: 33188,
+    uid: 1000,
+    gid: 1000,
+    size: 964,
+    sha: "073f322ea00ac549f3f8ee50ffeaf21ace35aa53ad023c2283008e3372a701a9",
+    flags: 9,
+    assume_valid: false,
+    extended: false,
+    stage: (
+        false,
+        false,
+    ),
+    name: "./README.md",
+}
+IndexEntry {
+    entry_number: 1,
+    ctime: 1730633946.04647,
+    mtime: 1730633963.541174,
+    dev: 2080,
+    ino: 51960,
+    mode: 33188,
+    uid: 1000,
+    gid: 1000,
+    size: 307,
+    sha: "1507291a429b870b8ce004cee92d0e6a6dd769f75ad80ed5c2bc395c155df38e",
+    flags: 9,
+    assume_valid: false,
+    extended: false,
+    stage: (
+        false,
+        false,
+    ),
+    name: "./DEBUGSCANMT.txt",
+}
+IndexEntry {
+    entry_number: 1,
+    ctime: 1730603028.610612,
+    mtime: 1730603028.610612,
+    dev: 2080,
+    ino: 160088,
+    mode: 33188,
+    uid: 1000,
+    gid: 1000,
+    size: 1535,
+    sha: "17fffb4e75560d32b1bfca2960c2526a0e5f4da237343006d03018c6fe4e1c1a",
+    flags: 9,
+    assume_valid: false,
+    extended: false,
+    stage: (
+        false,
+        false,
+    ),
+    name: "./src/diff.rs",
+}
+IndexEntry {
+    entry_number: 1,
+    ctime: 1730603028.610612,
+    mtime: 1730603028.610612,
+    dev: 2080,
+    ino: 160082,
+    mode: 33188,
+    uid: 1000,
+    gid: 1000,
+    size: 243,
+    sha: "d0d1dbea7bfe766b35343a2e4912d428b1a13a81e74a193087302cced5a10c14",
+    flags: 9,
+    assume_valid: false,
+    extended: false,
+    stage: (
+        false,
+        false,
+    ),
+    name: "./Cargo.toml",
+}
+IndexEntry {
+    entry_number: 1,
+    ctime: 1730603028.610612,
+    mtime: 1730603028.610612,
+    dev: 2080,
+    ino: 160061,
+    mode: 33188,
+    uid: 1000,
+    gid: 1000,
+    size: 66,
+    sha: "2ba06f53047db9f13c58d9b73bac7f1a306197cc3eb291a89a58ae057bd36844",
+    flags: 9,
+    assume_valid: false,
+    extended: false,
+    stage: (
+        false,
+        false,
+    ),
+    name: "./.gitignore",
+}
+IndexEntry {
+    entry_number: 1,
+    ctime: 1730603028.610612,
+    mtime: 1730603028.610612,
+    dev: 2080,
+    ino: 160077,
+    mode: 33188,
+    uid: 1000,
+    gid: 1000,
+    size: 176,
+    sha: "37aebcf07952799bd19735330519dfd7fb37d3b9d7225857dac2c1cdd97a02fb",
+    flags: 9,
+    assume_valid: false,
+    extended: false,
+    stage: (
+        false,
+        false,
+    ),
+    name: "./.idea/.gitignore",
+}
+IndexEntry {
+    entry_number: 1,
+    ctime: 1730603345.4066792,
+    mtime: 1730633934.7423825,
+    dev: 2080,
+    ino: 161183,
+    mode: 33188,
+    uid: 1000,
+    gid: 1000,
+    size: 309,
+    sha: "724bf560f8ac33ea49506eddb1681fbb54568cdb6897aa07697350d165653acd",
+    flags: 9,
+    assume_valid: false,
+    extended: false,
+    stage: (
+        false,
+        false,
+    ),
+    name: "./src/log.rs",
+}
+IndexEntry {
+    entry_number: 1,
+    ctime: 1730603028.610612,
+    mtime: 1730603028.610612,
+    dev: 2080,
+    ino: 160090,
+    mode: 33188,
+    uid: 1000,
+    gid: 1000,
+    size: 1456,
+    sha: "738b83cfd82a5e5e8bd86ea31cd36adb53c7d102fdf67ec84a0f2bc31cdf9ff8",
+    flags: 9,
+    assume_valid: false,
+    extended: false,
+    stage: (
+        false,
+        false,
+    ),
+    name: "./src/init.rs",
+}
+IndexEntry {
+    entry_number: 1,
+    ctime: 1730603028.610612,
+    mtime: 1730603028.610612,
+    dev: 2080,
+    ino: 160092,
+    mode: 33188,
+    uid: 1000,
+    gid: 1000,
+    size: 12548,
+    sha: "d9b080fb2f48fa6ada04480f5b21c3ea8e8e3ab28cb2ca19ea8f6e31b91b9aa3",
+    flags: 9,
+    assume_valid: false,
+    extended: false,
+    stage: (
+        false,
+        false,
+    ),
+    name: "./src/parsingops.rs",
+}
+IndexEntry {
+    entry_number: 1,
+    ctime: 1730603028.610612,
+    mtime: 1730603028.610612,
+    dev: 2080,
+    ino: 160087,
+    mode: 33188,
+    uid: 1000,
+    gid: 1000,
+    size: 3981,
+    sha: "4e0684d23370e3329fd9996b6b840fe4dd40bdd17b065ee27d08fa24ae4b64b1",
+    flags: 9,
+    assume_valid: false,
+    extended: false,
+    stage: (
+        false,
+        false,
+    ),
+    name: "./src/commits.rs",
+}
+IndexEntry {
+    entry_number: 1,
+    ctime: 1730603028.610612,
+    mtime: 1730603028.610612,
+    dev: 2080,
+    ino: 160083,
+    mode: 33188,
+    uid: 1000,
+    gid: 1000,
+    size: 18092,
+    sha: "82287083df2e2d11c4ad66a5df98be1a7c74ebbdf525c27fde545a199a1fd822",
+    flags: 9,
+    assume_valid: false,
+    extended: false,
+    stage: (
+        false,
+        false,
+    ),
+    name: "./LICENSE",
+}
+IndexEntry {
+    entry_number: 1,
+    ctime: 1730603322.9344213,
+    mtime: 1730631712.039716,
+    dev: 2080,
+    ino: 161068,
+    mode: 33188,
+    uid: 1000,
+    gid: 1000,
+    size: 9697,
+    sha: "3fc8d76627147c66f418d907a94f4bdb38655b7e61cef5ed19036d412bccbeb6",
+    flags: 9,
+    assume_valid: false,
+    extended: false,
+    stage: (
+        false,
+        false,
+    ),
+    name: "./FILEDEBUG.txt",
+}
+IndexEntry {
+    entry_number: 1,
+    ctime: 1730603028.610612,
+    mtime: 1730603028.610612,
+    dev: 2080,
+    ino: 160078,
+    mode: 33188,
+    uid: 1000,
+    gid: 1000,
+    size: 483,
+    sha: "89e126f8c6fd68fe10758381bf82a567a0e74c3771165899ea89e9b6997803bc",
+    flags: 9,
+    assume_valid: false,
+    extended: false,
+    stage: (
+        false,
+        false,
+    ),
+    name: "./.idea/litt.iml",
+}
+IndexEntry {
+    entry_number: 1,
+    ctime: 1730603028.610612,
+    mtime: 1730603513.1191578,
+    dev: 2080,
+    ino: 160091,
+    mode: 33188,
+    uid: 1000,
+    gid: 1000,
+    size: 1956,
+    sha: "a4f9b06c3f0872b78dd2367198cdb8e5da9ac967f0b041c7488d0ab57b5d9c34",
+    flags: 9,
+    assume_valid: false,
+    extended: false,
+    stage: (
+        false,
+        false,
+    ),
+    name: "./src/main.rs",
+}
+IndexEntry {
+    entry_number: 1,
+    ctime: 1730603028.610612,
+    mtime: 1730603028.610612,
+    dev: 2080,
+    ino: 160093,
+    mode: 33188,
+    uid: 1000,
+    gid: 1000,
+    size: 1419,
+    sha: "a5d88d6af1a5dbf242ca08ac79aceec05c129ffe13c5bae0ab1c79585fb42979",
+    flags: 9,
+    assume_valid: false,
+    extended: false,
+    stage: (
+        false,
+        false,
+    ),
+    name: "./src/staging.rs",
+}
+IndexEntry {
+    entry_number: 1,
+    ctime: 1730603028.610612,
+    mtime: 1730603028.610612,
+    dev: 2080,
+    ino: 160081,
+    mode: 33188,
+    uid: 1000,
+    gid: 1000,
+    size: 13171,
+    sha: "8534246c2319b4b3933379fecda2d7f2c2566c54d75b51d2dcf768f2fe71c36b",
+    flags: 9,
+    assume_valid: false,
+    extended: false,
+    stage: (
+        false,
+        false,
+    ),
+    name: "./Cargo.lock",
+}
+IndexEntry {
+    entry_number: 1,
+    ctime: 1730603028.610612,
+    mtime: 1730633914.276007,
+    dev: 2080,
+    ino: 160089,
+    mode: 33188,
+    uid: 1000,
+    gid: 1000,
+    size: 16770,
+    sha: "d90f3b84b554074701810e6b7c3d23eef728bce8462168cd022aacfc66ed444e",
+    flags: 9,
+    assume_valid: false,
+    extended: false,
+    stage: (
+        false,
+        false,
+    ),
+    name: "./src/fileops.rs",
+}
+-------------------------------------------------------------------------------------------------------------------
+(
+    "8534246c2319b4b3933379fecda2d7f2c2566c54d75b51d2dcf768f2fe71c36b",
+    "./Cargo.lock",
+)
+(
+    "738b83cfd82a5e5e8bd86ea31cd36adb53c7d102fdf67ec84a0f2bc31cdf9ff8",
+    "./src/init.rs",
+)
+(
+    "4e0684d23370e3329fd9996b6b840fe4dd40bdd17b065ee27d08fa24ae4b64b1",
+    "./src/commits.rs",
+)
+(
+    "1507291a429b870b8ce004cee92d0e6a6dd769f75ad80ed5c2bc395c155df38e",
+    "./DEBUGSCANMT.txt",
+)
+(
+    "17fffb4e75560d32b1bfca2960c2526a0e5f4da237343006d03018c6fe4e1c1a",
+    "./src/diff.rs",
+)
+(
+    "073f322ea00ac549f3f8ee50ffeaf21ace35aa53ad023c2283008e3372a701a9",
+    "./README.md",
+)
+(
+    "a5d88d6af1a5dbf242ca08ac79aceec05c129ffe13c5bae0ab1c79585fb42979",
+    "./src/staging.rs",
+)
+(
+    "e0d1ea25d01d437da32e24dfb06ae7f7f7e4042b2dc32350e647a12c71f807c1",
+    "./.idea/modules.xml",
+)
+(
+    "37aebcf07952799bd19735330519dfd7fb37d3b9d7225857dac2c1cdd97a02fb",
+    "./.idea/.gitignore",
+)
+(
+    "a4f9b06c3f0872b78dd2367198cdb8e5da9ac967f0b041c7488d0ab57b5d9c34",
+    "./src/main.rs",
+)
+(
+    "d90f3b84b554074701810e6b7c3d23eef728bce8462168cd022aacfc66ed444e",
+    "./src/fileops.rs",
+)
+(
+    "89e126f8c6fd68fe10758381bf82a567a0e74c3771165899ea89e9b6997803bc",
+    "./.idea/litt.iml",
+)
+(
+    "d9b080fb2f48fa6ada04480f5b21c3ea8e8e3ab28cb2ca19ea8f6e31b91b9aa3",
+    "./src/parsingops.rs",
+)
+(
+    "2ba06f53047db9f13c58d9b73bac7f1a306197cc3eb291a89a58ae057bd36844",
+    "./.gitignore",
+)
+(
+    "724bf560f8ac33ea49506eddb1681fbb54568cdb6897aa07697350d165653acd",
+    "./src/log.rs",
+)
+(
+    "344b5e678cb52dadfe3561f63966fb2b3d9b1f9ecebd6a098a748ffe0010e366",
+    "./litt_test.sh",
+)
+(
+    "d0d1dbea7bfe766b35343a2e4912d428b1a13a81e74a193087302cced5a10c14",
+    "./Cargo.toml",
+)
+(
+    "f7ba9e52f5ec9871d3073f75f6ed44be0e0fe69df9099654db90e0cf54cd6607",
+    "./.idea/vcs.xml",
+)
+(
+    "3fc8d76627147c66f418d907a94f4bdb38655b7e61cef5ed19036d412bccbeb6",
+    "./FILEDEBUG.txt",
+)
+(
+    "82287083df2e2d11c4ad66a5df98be1a7c74ebbdf525c27fde545a199a1fd822",
+    "./LICENSE",
+)

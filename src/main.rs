@@ -7,6 +7,7 @@ mod fileops;
 mod init;
 mod parsingops;
 mod staging;
+mod log;
 // figure out how to use env variables to store email,name of the commiter much easier than the other one i was thinking about
 // which was create a file in .config/litt and store info there idk tbh
 fn main() -> Result<(), io::Error> {
@@ -27,7 +28,7 @@ fn main() -> Result<(), io::Error> {
         }
         "commit" => commits::commit(),
         "status" => status()?,
-        "log" => log(),
+        "log" => log::log(),
         "cat-file" => {
             if args.len() < 3 {
                 println!("ERROR! No args provided for cat-file.");
@@ -53,18 +54,7 @@ fn status() -> Result<(), io::Error> {
     Ok(())
 }
 
-fn log() {
-    // parsingops::test_indextemp();
-    // println!("IN LOG EXECUTED SUCCESSFULLY!");
 
-    let mut count = 0;
-    let mut a = scanfiles_and_ignoremt(".");
-    for i in &mut a {
-        count+=1;
-        println!("{}", i);
-    }
-    println!("Found {} files", count);
-}
 
 fn helpcom() {
     scanfiles_and_ignoremt(".");

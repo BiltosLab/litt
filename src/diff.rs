@@ -4,11 +4,12 @@ pub fn find_diff_lines(original_file: Vec<String>, modified_file: Vec<String>) -
     let mut differences: Vec<String> = Vec::new();
 
     let max_lines = original_file.len().max(modified_file.len());
-
+    let mut equal_line_count = 0;
     for i in 0..max_lines {
         match (original_file.get(i), modified_file.get(i)) {
             (Some(line1), Some(line2)) if line1 == line2 => {
-                //differences.push(format!("  {}", line1));
+                // differences.push(format!("  {}", line1.blue()));
+                equal_line_count+=1;
             }
             (Some(line1), Some(line2)) => {
                 differences.push(format!("- {}", line1.red()));
@@ -23,7 +24,7 @@ pub fn find_diff_lines(original_file: Vec<String>, modified_file: Vec<String>) -
             _ => unreachable!(), // This case should not happen due to max_lines
         }
     }
-
+    println!("Percentage of Similarity ? {:#?}%",(equal_line_count as f32/max_lines as f32*100.0));
     differences
 }
 
@@ -32,6 +33,17 @@ pub fn find_diff_lines(original_file: Vec<String>, modified_file: Vec<String>) -
 // We go through each file we can access meaning its not in .littignore and compare the names first see which files are new and which are the same
 // then we put the new files aside and compare the hash of existing files and their counterparts in the commit and then we print which are new and which got modified only.
 
-pub fn status(){
-
+pub fn similarity_percentage(original_file: Vec<String>, modified_file: Vec<String>) -> f32 { // need to make this give the location of the diff later on
+    let max_lines = original_file.len().max(modified_file.len());
+    let mut equal_line_count = 0;
+    for i in 0..max_lines {
+        match (original_file.get(i), modified_file.get(i)) {
+            (Some(line1), Some(line2)) if line1 == line2 => {
+                // differences.push(format!("  {}", line1.blue()));
+                equal_line_count+=1;
+            }
+            _ => unreachable!(), // This case should not happen due to max_lines
+        }
+    }
+    (equal_line_count as f32/max_lines as f32*100.0)
 }

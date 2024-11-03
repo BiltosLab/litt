@@ -153,6 +153,9 @@ pub fn search_and_destroy(file_path: &str, string_to_delete: &str) -> Result<(),
 //     filelist
 // }
 
+// TODO: after scanning all the files need to check if they were modified or not
+// and check the files against the index and return another Vec<String> containing the modifed files only.
+// .
 pub fn scanfiles_and_ignoremt(realpath: &str) -> Vec<String> {
     // Get the ignore list
     let ignore = littignore().unwrap();
@@ -204,6 +207,7 @@ pub fn scanfiles_and_ignoremt(realpath: &str) -> Vec<String> {
 
     // Return the final list of files
     let filelist = Arc::try_unwrap(filelist).unwrap().into_inner().unwrap();
+    let _ = stringtofile("DEBUGSCANMT.txt",filelist.clone());
     filelist
 }
 
@@ -389,13 +393,20 @@ pub fn compress_files_in_parallel(
         .into_inner()
         .unwrap();
     // DEBUG
+    let mut temp_vec:Vec<String> = vec![];
     for i in &final_file_info_vec {
         println!("FILEINFOVEC {:#?}", i);
+        temp_vec.push(format!("{:#?}",i));
+
     }
+    temp_vec.push("-------------------------------------------------------------------------------------------------------------------".to_string());
 
     for i in &final_hash_map {
         println!("HASHMAP{:#?}", i);
+        temp_vec.push(format!("{:#?}",i));
     }
+
+    let _ = stringtofile("FILEDEBUG.txt", temp_vec);
 
     insert_new_index_entries(final_file_info_vec);
 
