@@ -1,6 +1,3 @@
-/*
-    This file contains all the functions that do operations of files 
-*/
 use flate2::read::DeflateDecoder;
 use flate2::write::DeflateEncoder;
 use flate2::Compression;
@@ -20,7 +17,8 @@ use colored::Colorize;
 use crate::parsingops::insert_new_index_entries;
 
 use crate::parsingops::IndexEntry;
-pub fn filetostring(filetoparse:&str) -> Result<Vec<String>, io::Error>{ // Function to Parse files line by line into a Vec<String>
+
+pub fn filetostring(filetoparse:&str) -> Result<Vec<String>, io::Error>{
     let mut f = File::open(filetoparse)?;
     let mut tokens:Vec<String> = vec![];
     let mut reader = io::BufReader::new(f);
@@ -72,90 +70,8 @@ pub fn stringtofile(filepath:&str,content:Vec<String>) -> Result<(), std::io::Er
 }
 
 
-// this one will not delete any content it'll just append it to the file which is what i need for commit history :D
-// It does an entire Vector
-pub fn appendv_to_file(file_path: &str, lines: Vec<String>) -> io::Result<()> { 
-    let mut file = OpenOptions::new()
-        .write(true)
-        .append(true)
-        .create(true) 
-        .open(file_path)?;
 
-    for line in lines {
-        writeln!(file, "{}", line)?;
-    }
 
-    Ok(())
-}
-// this one will not delete any content it'll just append it to the file which is what i need for commit history :D
-// Also this one does 1 string only at a time
-pub fn appendstr_to_file(file_path: &str, line: String) -> Result<(), io::Error> {
-    let mut file = OpenOptions::new()
-        .write(true)
-        .append(true)
-        .create(true)
-        .open(file_path)?;
-
-    writeln!(file, "{}", line)?;
-
-    Ok(())
-}
-
-pub fn search_and_destroy(file_path: &str, string_to_delete: &str) -> Result<(), std::io::Error>  {
-    let filecontent = BufReader::new(File::open(file_path)?);
-    let mut newfile: Vec<String> = Vec::new();
-
-    for line in filecontent.lines() {
-        let line = line?;
-        if !line.contains(string_to_delete) {
-            newfile.push(line);
-        };
-    }
-
-    let mut f = File::create(file_path)?;
-    for line in newfile {
-        writeln!(f, "{}", line)?;
-    }
-
-    Ok(())
-}
-
-// pub fn scanfiles_and_ignore(realpath:&str) -> Vec<String> {
-//     let ignore = littignore().unwrap();
-//     let mut filelist:Vec<String> = Vec::new();
-//
-//     if let Ok(dirf) = fs::read_dir(realpath)
-//     {
-//         for path in dirf{
-//             if let Ok(path) = path {
-//                 if let Ok(metta) = path.metadata(){
-//                     let path_str = path.path().to_str().unwrap().to_string();
-//                     if ignore.iter().any(|ignore_path| path_str.contains(ignore_path)) {
-//                         continue;
-//                     }
-//                     if metta.is_dir(){
-//                         //if ignore.contains(path.file_name().to_string_lossy().to_string().borrow_mut()) {continue;}
-//                         filelist.extend(scanfiles_and_ignore(&path.path().to_string_lossy()));
-//                     }
-//                     else if metta.is_file() {
-//                         //println!("{:?}",path.path().to_str().unwrap());
-//                         filelist.push(path.path().to_str().unwrap().to_string());
-//                         //println!("{:?}",path.path().to_str().unwrap());
-//                     }
-//                 }
-//
-//             }
-//
-//         }
-//     }
-//
-//
-//     filelist
-// }
-
-// TODO: after scanning all the files need to check if they were modified or not
-// and check the files against the index and return another Vec<String> containing the modifed files only.
-// .
 pub fn scanfiles_and_ignoremt(realpath: &str) -> Vec<String> {
     // Get the ignore list
     let ignore = littignore().unwrap();
@@ -207,7 +123,7 @@ pub fn scanfiles_and_ignoremt(realpath: &str) -> Vec<String> {
 
     // Return the final list of files
     let filelist = Arc::try_unwrap(filelist).unwrap().into_inner().unwrap();
-    let _ = stringtofile("DEBUGSCANMT.txt",filelist.clone());
+    //let _ = stringtofile("DEBUGSCANMT.txt",filelist.clone());
     filelist
 }
 
@@ -406,97 +322,13 @@ pub fn compress_files_in_parallel(
         temp_vec.push(format!("{:#?}", i));
     }
 
-    let _ = stringtofile("FILEDEBUG.txt", temp_vec);
+    //let _ = stringtofile("FILEDEBUG.txt", temp_vec);
 
     insert_new_index_entries(final_file_info_vec.clone(), final_hash_map.clone());
 
     Ok((final_hash_map, final_file_info_vec))
 }
 
-
-// bad func but wont remove it yet 
-// pub fn compress_files_in_parallel(
-//     file_paths: Vec<String>
-// ) -> Result<(HashMap<String, String>,Vec<IndexEntry>), io::Error> {
-//     let mut handles = vec![];
-
-//     let file_hash_map = Arc::new(Mutex::new(HashMap::new()));
-//     let file_info_vec = Arc::new(Mutex::new(Vec::new()));
-
-//     let file_paths = Arc::new(file_paths);
-
-//     for inputfile in &*file_paths {
-//         let inputfile = inputfile.clone();
-//         let file_hash_map = Arc::clone(&file_hash_map);
-//         let file_info_vec = Arc::clone(&file_info_vec);
-
-//         let handle = thread::spawn(move || {
-//             match computehashmt(&inputfile) {
-//                 Ok(outputfile) => {
-//                     {
-//                         let mut hash_map = file_hash_map.lock().unwrap();
-//                         hash_map.insert(outputfile.clone(), inputfile.clone());
-//                     }
-
-//                     if let Err(e) = compressfile(&inputfile, &("./.litt/objects/".to_owned() + &outputfile)) {
-//                         eprintln!("Error compressing file {}: {}", inputfile, e);
-//                     } else {
-//                         println!("Successfully compressed {} to {}", inputfile, outputfile);
-//                     }
-
-//                     // Pass the computed hash to `extract_file_info`
-//                     match extract_file_info(&inputfile, outputfile.clone()) {
-//                         Ok(file_info) => {
-//                             let mut file_info_vec = file_info_vec.lock().unwrap();
-//                             file_info_vec.push(file_info);
-//                         }
-//                         Err(e) => {
-//                             eprintln!("Error extracting file info for {}: {}", inputfile, e);
-//                         }
-//                     }
-//                 }
-//                 Err(e) => {
-//                     eprintln!("Error computing hash for file {}: {}", inputfile, e);
-//                 }
-//             }
-//         });
-
-//         handles.push(handle);
-//     }
-
-//     for handle in handles {
-//         handle.join().unwrap();
-//     }
-
-//     let final_hash_map = Arc::try_unwrap(file_hash_map)
-//         .unwrap()
-//         .into_inner()
-//         .unwrap();
-
-//     let final_file_info_vec = Arc::try_unwrap(file_info_vec)
-//         .unwrap()
-//         .into_inner()
-//         .unwrap();
-//     // DEBUG
-//     let mut temp_vec:Vec<String> = vec![];
-//     for i in &final_file_info_vec {
-//         println!("FILEINFOVEC {:#?}", i);
-//         temp_vec.push(format!("{:#?}",i));
-
-//     }
-//     temp_vec.push("-------------------------------------------------------------------------------------------------------------------".to_string());
-
-//     for i in &final_hash_map {
-//         println!("HASHMAP{:#?}", i);
-//         temp_vec.push(format!("{:#?}",i));
-//     }
-
-//     let _ = stringtofile("FILEDEBUG.txt", temp_vec);
-
-//     insert_new_index_entries(final_file_info_vec.clone(),final_hash_map.clone());
-
-//     Ok((final_hash_map,final_file_info_vec))
-// }
 
 pub fn computehashmt(file: &str) -> Result<String, io::Error> {
     let input_file = File::open(file)?;
@@ -514,46 +346,6 @@ pub fn computehashmt(file: &str) -> Result<String, io::Error> {
     Ok(format!("{:x}", hasher.finalize()))
 }
 
-// pub fn computehashmt(file: &str) -> Result<String, io::Error> {
-//     let input_file = File::open(file)?;
-//     let reader = BufReader::new(input_file);
-
-//     let chunk_size = 4096; // 4KB chunks
-//     let mut handles = vec![];
-
-//     let hash_results = Arc::new(Mutex::new(vec![]));
-
-//     for chunk in reader.bytes().collect::<Result<Vec<u8>, _>>()?.chunks(chunk_size).map(|c| c.to_vec()) {
-//         let chunk = Arc::new(chunk);
-//         let hash_results = Arc::clone(&hash_results);
-
-//         let handle = thread::spawn(move || {
-//             let mut hasher = Sha256::new();
-//             hasher.update(&*chunk);
-//             let hash = format!("{:x}", hasher.finalize());
-
-//             let mut results = hash_results.lock().unwrap();
-//             results.push(hash);
-//         });
-
-//         handles.push(handle);
-//     }
-
-//     for handle in handles {
-//         handle.join().unwrap();
-//     }
-
-//     let final_hash = {
-//         let hash_results = hash_results.lock().unwrap();
-//         let mut hasher = Sha256::new();
-//         for hash in &*hash_results {
-//             hasher.update(hash.as_bytes());
-//         }
-//         format!("{:x}", hasher.finalize())
-//     };
-
-//     Ok(final_hash)
-// }
 
 pub fn compute_vec_hash(content: &Vec<String>) -> String {
     let mut hasher = Sha256::new();

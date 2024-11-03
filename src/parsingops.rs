@@ -158,7 +158,7 @@ pub fn indexentryparser(entrystr:Vec<String>) -> Result<IndexEntry, ParseError> 
           "uid" => entry.uid = value.parse().unwrap(),
           "gid" => entry.gid = value.parse().unwrap(),
           "size" => entry.size = value.parse().unwrap(),
-          "sha" => entry.sha = value.to_string(), // Assuming sha is a string
+          "sha" => entry.sha = value.to_string(),
           "flags" => entry.flags = value.parse().unwrap(),
           "assume-valid" => entry.assume_valid = value.parse().unwrap(),
           "extended" => entry.extended = value.parse().unwrap(),
@@ -166,8 +166,8 @@ pub fn indexentryparser(entrystr:Vec<String>) -> Result<IndexEntry, ParseError> 
               let stage_parts: Vec<&str> = value.split(',').collect();
               entry.stage = (stage_parts[0].parse().unwrap(), stage_parts[1].parse().unwrap());
           },
-          "name" => entry.name = value.to_string(), // Assuming name is a string
-          _ => {} // Ignore unknown keys
+          "name" => entry.name = value.to_string(), 
+          _ => {}
       }
       
       }
@@ -178,8 +178,8 @@ pub fn indexentryparser(entrystr:Vec<String>) -> Result<IndexEntry, ParseError> 
 
 
 /*
-* Bit 0: 0 = unmodified, 1 = version from ours branch
-* Bit 1: 0 = unmodified, 1 = version from theirs branch
+* Bit 0: 0 = unmodified, 1 = version from our branch
+* Bit 1: 0 = unmodified, 1 = version from their branch
 */
 fn entries_to_string_vec(entry:&IndexEntry) -> Vec<String> {
   let mut stringout:Vec<String> = Vec::new();
@@ -256,58 +256,75 @@ fn indexchecksumparser(checksumh:Vec<String>) -> Result<IndexChecksum, ParseErro
   Ok(indexchecksum)
 }
 
-// TODO now functions to take the 3 struct types 1 of header 1 of checksum and X number of Entry structs
-// And convert them to a file so we can generate an entry and insert it to the index file
-// also i want to compress and decompress index at use just to save more space.
-/*
-* Function to add an entry to index
-* has to be A--Z or 1--9 Sorted.
-* i think best option is to parse the entire file with indexentryparser and the rest the make the new index again
-*/
-/*
-* How this function should work? First take an Vec<IndexEntry> of entires then append new entries to it
-* Then sort them based on name ? or as git sorts it then we just rewrite new index
-* With new hash at the end?
-*/
 
-
-// THIS IS A TEST FUNCTION REMOVE AT PROD TIME
-
-pub fn insert_new_index_entries(newentires:Vec<IndexEntry>,map:HashMap<String, String>){
-    let (mut indexheader,mut entries,mut indexchecksum) = index_parser();
-    let mut diff_entires:Vec<IndexEntry> = vec![] ;
-    // entries.extend(newentires.clone());
-    // Compare between the index and current files and update any file that's already in the index
-    if &newentires.len() != &map.len(){
-      eprintln!("{}","BUGGED,Files Unequal length of compressed files and entries".red());
-      eprintln!("{:#?} Length of newentries ,\n{:#?} Length of map" ,&newentires.len(),&map.len());
+pub fn insert_new_index_entries(newentries: Vec<IndexEntry>, map: HashMap<String, String>) {
+  let (mut indexheader, mut entries, mut indexchecksum) = index_parser();
+  let mut diff_entries: Vec<IndexEntry> = vec![];
+  if newentries.len() != map.len() {
+      eprintln!("{}","BUGGED: Unequal length of new entries and map".red());
+      eprintln!("New entries length: {}, Map length: {}", newentries.len(), map.len());
       exit(1);
-    }
-   // Find a modified file in the index and update its entry
-    // special case if its first time adding it will be empty.
-    if entries.len() == 0{
-      entries.extend(newentires);
-    }
-    else {
-      for i in &newentires{
-        if entries.contains(i){
-          continue;
-        }
-        else {
-            diff_entires.push(i.clone());
-        }
-    }
-    entries.extend(diff_entires);
   }
 
+  if entries.is_empty() {
+      entries.extend(newentries);
+  } else {
+      let mut existing_name_map: HashMap<&String, usize> = HashMap::new();
+      let mut existing_hash_map: HashMap<&String, usize> = HashMap::new();
+      for (index, entry) in entries.iter().enumerate() {
+          existing_name_map.insert(&entry.name, index);
+          existing_hash_map.insert(&entry.sha, index);
+      }
 
-    unsigned_byte_sort_structs(&mut entries);
-    stringtofile("./.litt/index",stitch_index_file(indexheader,entries,indexchecksum)).expect("INDEX FILE CORRUPTION!");
+      let mut modifications = Vec::new();
+      for new_entry in &newentries {
+          if let Some(&existing_index) = existing_name_map.get(&new_entry.name) {
+              let existing_entry = &entries[existing_index];
+              if existing_entry == new_entry {
+                  continue;
+              } else {
+                  modifications.push((existing_index, new_entry.clone()));
+              }
+          } else if let Some(&existing_index) = existing_hash_map.get(&new_entry.sha) {
+              let existing_entry = &entries[existing_index];
+              if existing_entry.name != new_entry.name {
+                  diff_entries.push(new_entry.clone());
+              }
+          } else {
+              diff_entries.push(new_entry.clone());
+          }
+      }
+      for (index, new_entry) in modifications {
+          entries[index] = new_entry;
+      }
+      entries.extend(diff_entries);
+  }
+
+  // DEBUG
+  println!("Entries before deletion: {:#?}", entries);
+
+  
+  entries.retain(|entry| {
+      let exists = map.values().any(|path| path == &entry.name);
+      if !exists {
+          // DEBUG
+          println!("Removing deleted file from entries: {}", entry.name);
+      }
+      exists
+  });
 
 
-
-    //TODO after this basic thing just stitch everything back together into a new index file :D
+  unsigned_byte_sort_structs(&mut entries);
+  if let Err(e) = stringtofile("./.litt/index", stitch_index_file(indexheader, entries.clone(), indexchecksum)) {
+      eprintln!("Error writing to index file: {}", e);
+  } else {
+      println!("Successfully wrote to index file.");
+  }
 }
+
+
+
+
 
 fn stitch_index_file(index_header: IndexHeader,entries :Vec<IndexEntry>,index_checksum: IndexChecksum) -> Vec<String>{
     let mut mainfile:Vec<String> = Vec::new();
@@ -354,46 +371,3 @@ fn unsigned_byte_sort_structs(entries: &mut Vec<IndexEntry>) {
     }
 }
 
-/* This is how git index looks like and that's what we're going to mimic
-[header]
-  signature = DIRC
-  version = 3
-  entries = 5
-
-[entry]
-  entry = 1
-  ctime = 1363549359.0
-  mtime = 1363549359.0
-  dev = 16777217
-  ino = 1154043
-  mode = 100644
-  uid = 501
-  gid = 20
-  size = 6
-  sha = d5f7fc3f74f7dec08280f370a975b112e8f60818
-  flags = 9
-  assume-valid = false
-  extended = false
-  stage = false,false
-  name = added.txt
-[entry]
-  entry = 2
-  ctime = 123124.0
-  mtime = 12312312.0
-  dev = 444412
-  ino = 1154043
-  mode = 111111
-  uid = 244
-  gid = 224
-  size = 6
-  sha = d5f7fc3f74f7dec08280f370a975b112e8f60818
-  flags = 9
-  assume-valid = false
-  extended = false
-  stage = false,false
-  name = bobo.txt
-
-[checksum]
-  checksum = True
-  sha = 1ef0972eb948e6229240668effcb9c600fe5888d
-   */
