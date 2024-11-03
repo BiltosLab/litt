@@ -1,6 +1,10 @@
 use core::panic;
+use std::collections::HashMap;
+use std::process::exit;
 use std::{cmp::Ordering, ops::Index, string::ParseError};
 use std::fmt::format;
+use colored::Colorize;
+
 use crate::{filetostring, fileops::stringtofile};
 use crate::fileops::compute_vec_hash;
 
@@ -73,7 +77,24 @@ impl Default for IndexEntry {
         }
     }
 }
-
+impl PartialEq for IndexEntry {
+  fn eq(&self, other: &Self) -> bool {
+      self.ctime == other.ctime &&
+      self.mtime == other.mtime &&
+      self.dev == other.dev &&
+      self.ino == other.ino &&
+      self.mode == other.mode &&
+      self.uid == other.uid &&
+      self.gid == other.gid &&
+      self.size == other.size &&
+      self.sha == other.sha &&
+      self.flags == other.flags &&
+      self.assume_valid == other.assume_valid &&
+      self.extended == other.extended &&
+      self.stage == other.stage &&
+      self.name == other.name
+  }
+}
 
 
 pub fn index_parser() -> (IndexHeader, Vec<IndexEntry>, IndexChecksum){
@@ -251,32 +272,35 @@ fn indexchecksumparser(checksumh:Vec<String>) -> Result<IndexChecksum, ParseErro
 
 
 // THIS IS A TEST FUNCTION REMOVE AT PROD TIME
-pub fn test_indextemp () {
-    let mut entries: Vec<IndexEntry> = vec![];
-    let index_entry = IndexEntry {
-        entry_number: 1,
-        ctime: 1625097600.0, // Example UNIX timestamp for creation time
-        mtime: 1625184000.0, // Example UNIX timestamp for modification time
-        dev: 2049, // Example device number
-        ino: 12345678, // Example inode number
-        mode: 33188, // Example file mode (e.g., regular file with rw-r--r-- permissions)
-        uid: 1000, // Example user ID
-        gid: 1000, // Example group ID
-        size: 1024, // Example file size in bytes
-        sha: "9b4b51d8467ce19201efb8a9c9e63e8407bc646e".to_string(), // Example SHA-1 hash
-        flags: 0b0010, // Example flags
-        assume_valid: false, // Example validity flag
-        extended: false, // Example extended flag
-        stage: (false, true), // Example stage (e.g., added to the index)
-        name: "example_file.txt".to_string(), // Example file name
-    };
-    entries.push(index_entry);
-    insert_new_index_entries(entries);
-    println!("EXECUTED SUCCESSFULLY !")
-}
-pub fn insert_new_index_entries(newentires:Vec<IndexEntry>){
+
+pub fn insert_new_index_entries(newentires:Vec<IndexEntry>,map:HashMap<String, String>){
     let (mut indexheader,mut entries,mut indexchecksum) = index_parser();
-    entries.extend(newentires);
+    let mut diff_entires:Vec<IndexEntry> = vec![] ;
+    // entries.extend(newentires.clone());
+    // Compare between the index and current files and update any file that's already in the index
+    if &newentires.len() != &map.len(){
+      eprintln!("{}","BUGGED,Files Unequal length of compressed files and entries".red());
+      eprintln!("{:#?} Length of newentries ,\n{:#?} Length of map" ,&newentires.len(),&map.len());
+      exit(1);
+    }
+   // Find a modified file in the index and update its entry
+    // special case if its first time adding it will be empty.
+    if entries.len() == 0{
+      entries.extend(newentires);
+    }
+    else {
+      for i in &newentires{
+        if entries.contains(i){
+          continue;
+        }
+        else {
+            diff_entires.push(i.clone());
+        }
+    }
+    entries.extend(diff_entires);
+  }
+
+
     unsigned_byte_sort_structs(&mut entries);
     stringtofile("./.litt/index",stitch_index_file(indexheader,entries,indexchecksum)).expect("INDEX FILE CORRUPTION!");
 
@@ -328,8 +352,6 @@ fn unsigned_byte_sort_structs(entries: &mut Vec<IndexEntry>) {
         i += 1;
         entry.entry_number = i;
     }
-
-
 }
 
 /* This is how git index looks like and that's what we're going to mimic

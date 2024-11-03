@@ -329,13 +329,15 @@ pub fn extract_file_info(file_path: &str, sha: String) -> Result<IndexEntry, io:
 
     Ok(entry)
 }
+
 pub fn compress_files_in_parallel(
     file_paths: Vec<String>
-) -> Result<(HashMap<String, String>, Vec<IndexEntry>), io::Error> {
+) -> Result<(HashMap<String, String>,Vec<IndexEntry>), io::Error> {
     let mut handles = vec![];
 
     let file_hash_map = Arc::new(Mutex::new(HashMap::new()));
     let file_info_vec = Arc::new(Mutex::new(Vec::new()));
+
     let file_paths = Arc::new(file_paths);
 
     for inputfile in &*file_paths {
@@ -344,7 +346,6 @@ pub fn compress_files_in_parallel(
         let file_info_vec = Arc::clone(&file_info_vec);
 
         let handle = thread::spawn(move || {
-            // Compute hash and directly use it to populate both file_hash_map and file_info_vec
             match computehashmt(&inputfile) {
                 Ok(outputfile) => {
                     {
@@ -352,14 +353,13 @@ pub fn compress_files_in_parallel(
                         hash_map.insert(outputfile.clone(), inputfile.clone());
                     }
 
-                    // Compress the file using the computed hash as the output filename
-                    if let Err(e) = compressfile(&inputfile, &format!("./.litt/objects/{}", outputfile)) {
+                    if let Err(e) = compressfile(&inputfile, &("./.litt/objects/".to_owned() + &outputfile)) {
                         eprintln!("Error compressing file {}: {}", inputfile, e);
                     } else {
                         println!("Successfully compressed {} to {}", inputfile, outputfile);
                     }
 
-                    // Pass the computed hash to `extract_file_info` immediately and update both
+                    // Pass the computed hash to `extract_file_info`
                     match extract_file_info(&inputfile, outputfile.clone()) {
                         Ok(file_info) => {
                             let mut file_info_vec = file_info_vec.lock().unwrap();
@@ -392,111 +392,26 @@ pub fn compress_files_in_parallel(
         .unwrap()
         .into_inner()
         .unwrap();
-
     // DEBUG
-    let mut temp_vec: Vec<String> = vec![];
+    let mut temp_vec:Vec<String> = vec![];
     for i in &final_file_info_vec {
         println!("FILEINFOVEC {:#?}", i);
-        temp_vec.push(format!("{:#?}", i));
+        temp_vec.push(format!("{:#?}",i));
+
     }
     temp_vec.push("-------------------------------------------------------------------------------------------------------------------".to_string());
 
     for i in &final_hash_map {
-        println!("HASHMAP {:#?}", i);
-        temp_vec.push(format!("{:#?}", i));
+        println!("HASHMAP{:#?}", i);
+        temp_vec.push(format!("{:#?}",i));
     }
 
     let _ = stringtofile("FILEDEBUG.txt", temp_vec);
 
-    insert_new_index_entries(final_file_info_vec.clone(), final_hash_map.clone());
+    insert_new_index_entries(final_file_info_vec.clone(),final_hash_map.clone());
 
-    Ok((final_hash_map, final_file_info_vec))
+    Ok((final_hash_map,final_file_info_vec))
 }
-
-
-// bad func but wont remove it yet 
-// pub fn compress_files_in_parallel(
-//     file_paths: Vec<String>
-// ) -> Result<(HashMap<String, String>,Vec<IndexEntry>), io::Error> {
-//     let mut handles = vec![];
-
-//     let file_hash_map = Arc::new(Mutex::new(HashMap::new()));
-//     let file_info_vec = Arc::new(Mutex::new(Vec::new()));
-
-//     let file_paths = Arc::new(file_paths);
-
-//     for inputfile in &*file_paths {
-//         let inputfile = inputfile.clone();
-//         let file_hash_map = Arc::clone(&file_hash_map);
-//         let file_info_vec = Arc::clone(&file_info_vec);
-
-//         let handle = thread::spawn(move || {
-//             match computehashmt(&inputfile) {
-//                 Ok(outputfile) => {
-//                     {
-//                         let mut hash_map = file_hash_map.lock().unwrap();
-//                         hash_map.insert(outputfile.clone(), inputfile.clone());
-//                     }
-
-//                     if let Err(e) = compressfile(&inputfile, &("./.litt/objects/".to_owned() + &outputfile)) {
-//                         eprintln!("Error compressing file {}: {}", inputfile, e);
-//                     } else {
-//                         println!("Successfully compressed {} to {}", inputfile, outputfile);
-//                     }
-
-//                     // Pass the computed hash to `extract_file_info`
-//                     match extract_file_info(&inputfile, outputfile.clone()) {
-//                         Ok(file_info) => {
-//                             let mut file_info_vec = file_info_vec.lock().unwrap();
-//                             file_info_vec.push(file_info);
-//                         }
-//                         Err(e) => {
-//                             eprintln!("Error extracting file info for {}: {}", inputfile, e);
-//                         }
-//                     }
-//                 }
-//                 Err(e) => {
-//                     eprintln!("Error computing hash for file {}: {}", inputfile, e);
-//                 }
-//             }
-//         });
-
-//         handles.push(handle);
-//     }
-
-//     for handle in handles {
-//         handle.join().unwrap();
-//     }
-
-//     let final_hash_map = Arc::try_unwrap(file_hash_map)
-//         .unwrap()
-//         .into_inner()
-//         .unwrap();
-
-//     let final_file_info_vec = Arc::try_unwrap(file_info_vec)
-//         .unwrap()
-//         .into_inner()
-//         .unwrap();
-//     // DEBUG
-//     let mut temp_vec:Vec<String> = vec![];
-//     for i in &final_file_info_vec {
-//         println!("FILEINFOVEC {:#?}", i);
-//         temp_vec.push(format!("{:#?}",i));
-
-//     }
-//     temp_vec.push("-------------------------------------------------------------------------------------------------------------------".to_string());
-
-//     for i in &final_hash_map {
-//         println!("HASHMAP{:#?}", i);
-//         temp_vec.push(format!("{:#?}",i));
-//     }
-
-//     let _ = stringtofile("FILEDEBUG.txt", temp_vec);
-
-//     insert_new_index_entries(final_file_info_vec.clone(),final_hash_map.clone());
-
-//     Ok((final_hash_map,final_file_info_vec))
-// }
 
 pub fn computehashmt(file: &str) -> Result<String, io::Error> {
     let input_file = File::open(file)?;
