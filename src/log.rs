@@ -6,7 +6,7 @@ pub fn log() {
     // println!("IN LOG EXECUTED SUCCESSFULLY!");
 
     let mut count = 0;
-    let mut a = scanfiles_and_ignoremt(".");
+    let mut a = scanfiles_and_ignoremt(".",true);
     for i in &mut a {
         count+=1;
         println!("{}", i);

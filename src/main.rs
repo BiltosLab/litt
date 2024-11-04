@@ -26,7 +26,22 @@ fn main() -> Result<(), io::Error> {
             }
             staging::add(args.into_iter().skip(2).collect());
         }
-        "commit" => commits::commit(),
+        "commit" => {
+            // Check for the -m flag and collect all following arguments as the commit message
+            if let Some(message_flag) = args.iter().position(|arg| arg == "-m") {
+                if message_flag + 1 < args.len() {
+                    // Join the arguments after -m to form the commit message
+                    let message: String = args[message_flag + 1..].join(" ");
+                    commits::commit("-m", &message);
+                } else {
+                    println!("ERROR! No commit message provided.");
+                    exit(1);
+                }
+            } else {
+                println!("ERROR! Missing -m flag for commit message.");
+                exit(1);
+            }
+        },
         "status" => status()?,
         "log" => log::log(),
         "cat-file" => {
@@ -39,7 +54,12 @@ fn main() -> Result<(), io::Error> {
             }
         },
         "checkout" => {
-            commits::checkout_commit();
+            if args.len() < 3 {
+                println!("ERROR! No commit hash provided for checkout.");
+                exit(1);
+            }
+            let partial_hash = args[2].clone();
+            commits::checkout_commit(partial_hash);
         }
         _ => println!("Unknown command: {}", cmd),
     }

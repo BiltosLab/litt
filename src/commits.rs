@@ -2,22 +2,22 @@ use std::{collections::{HashMap, HashSet}, fs, path::PathBuf, time::{SystemTime,
 use colored::Colorize;
 use chrono::offset::Local;
 use crate::{
-    fileops::{self, compute_vec_hash, split_path, stringtofile}, filetostring, parsingops::{self, IndexEntry}
+    fileops::{self, compute_vec_hash, split_path, stringtofile}, filetostring, find_full_hash, parsingops::{self, IndexEntry}
 };
 #[derive(Clone)]
 #[derive(Debug)]
-struct treeobj {
+struct Treeobj {
     entry_type: String,
     hash: String,
     name: String,
 }
 
 
-pub fn commit() {
+pub fn commit(option:&str,message:&str) {
     let (_index, indexentries, _indcheck) = parsingops::index_parser();
     let mut root_tree_object: Vec<String> = vec![];
     let mut added_dirs: HashSet<String> = HashSet::new();
-
+    let first = fileops::file_exists("./.litt/refs/heads/master");
     for entry in &indexentries {
         let splittedpath = split_path(&entry.name);
         let hash = &entry.sha;
@@ -32,11 +32,18 @@ pub fn commit() {
             root_tree_object.push(format!("tree {} {}", tree_hash, splittedpath[1]));
         }
     }
+    // Get previous commit if it exists.
+    // let head = filetostring("./.litt/refs/heads/master").unwrap();
+    // let data = parse_commit_data(head[0].clone()).unwrap_or_default();
+    // let root_tree_hash = data.get("tree").unwrap().to_string();
+    // let parent = data.get("parent").map(|s| s.to_string()).unwrap_or(String::from(""));
+    // let first_commit = data.contains_key("parent");
+    
 
     let root_hash = compute_vec_hash(&root_tree_object);
     let _ = stringtofile(format!("./.litt/objects/{}", root_hash).as_str(), root_tree_object);
     println!("TREE OBJ ROOT LOCATED IN {}", root_hash);
-    commit_object("HI", true, root_hash,"".to_string());
+    commit_object(message, !first, root_hash);
 }
 
 fn tree_object(dir: &str, entries: &[IndexEntry], added_dirs: &mut HashSet<String>) -> String {
@@ -72,14 +79,15 @@ fn tree_object(dir: &str, entries: &[IndexEntry], added_dirs: &mut HashSet<Strin
 
 
 
-fn commit_object(message:&str,first:bool,sha_root:String,sha_parent:String){
+fn commit_object(message:&str,first:bool,sha_root:String){
     let author = "Laith Shishani"; // we will change this to fetch from a config file but just a test for now
     let email = "mrlaith44@gmail.com"; // we will change this to fetch from a config file but just a test for now
     let mut commit:Vec<String> = Vec::new();
     let current_branch = "master";
     commit.push(format!("tree <{}>",sha_root));
     if !first{
-        commit.push(format!("parent <{}>",sha_parent));
+        let prev_commit_hash = filetostring(format!("./.litt/refs/heads/{}", current_branch).as_str()).unwrap();
+        commit.push(format!("parent <{}>",prev_commit_hash[0]));
     }
     commit.push(format!("author {} <{}> {} {}",author,email,SystemTime::now().duration_since(SystemTime::UNIX_EPOCH).expect("Time went backwards?").as_secs(),Local::now().format("%z")));
     commit.push(message.to_string());
@@ -109,11 +117,16 @@ Initial commit
 
 
 // Extract the commit to a folder for now
-pub fn checkout_commit() {
-    let head = filetostring("./.litt/refs/heads/master").unwrap();
-    let data = parse_commit_data(head[0].clone()).unwrap();
+pub fn checkout_commit(phash:String) {
+    // let head = filetostring("./.litt/refs/heads/master").unwrap();
+    let hash = find_full_hash(&phash).unwrap_or_default();
+    println!("{}",hash.red());
+
+    let data = parse_commit_data(hash).unwrap_or_default();
     let root_tree_hash = data.get("tree").unwrap().to_string();
-    
+    // let parent = data.get("parent").map(|s| s.to_string()).unwrap_or(String::from(""));
+    // let first_commit = data.contains_key("parent");
+
     let root_path = PathBuf::from("./COMMIT");
     let _ = fs::create_dir_all(&root_path); 
 
@@ -150,8 +163,10 @@ fn parse_commit_data(hash:String) -> Result<HashMap<String, String>, &'static st
                 parsed_data.insert("tree".to_string(), hash.trim_matches('<').trim_matches('>').to_string());
             }
         } else if line.starts_with("parent") {
+            // println!("DEBUG {}",line);
             // Extract the parent hash
             if let Some(hash) = line.split_whitespace().nth(1) {
+                // println!("DEBUG {}",hash);
                 parsed_data.insert("parent".to_string(), hash.trim_matches('<').trim_matches('>').to_string());
             }
         } else if line.starts_with("author") {
@@ -194,14 +209,14 @@ fn parse_commit_data(hash:String) -> Result<HashMap<String, String>, &'static st
 
 
 
-fn parse_tree_object(hash:String) -> Vec<treeobj> {
+fn parse_tree_object(hash:String) -> Vec<Treeobj> {
     let mut entries = Vec::new();
     let lines = filetostring(&format!("./.litt/objects/{}",hash)).unwrap();
 
     for line in lines {
         let parts: Vec<&str> = line.split_whitespace().collect();
         if parts.len() == 3 {
-            let entry = treeobj {
+            let entry = Treeobj {
                 entry_type: parts[0].to_string(),
                 hash: parts[1].to_string(),
                 name: parts[2].to_string(),

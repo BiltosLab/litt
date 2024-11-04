@@ -73,9 +73,13 @@ pub fn stringtofile(filepath:&str,content:Vec<String>) -> Result<(), std::io::Er
 
 
 
-pub fn scanfiles_and_ignoremt(realpath: &str) -> Vec<String> {
+pub fn scanfiles_and_ignoremt(realpath: &str,ignorefiles:bool) -> Vec<String> {
     // Get the ignore list
-    let ignore = littignore().unwrap();
+    let ignore: HashSet<String> = if ignorefiles {
+        littignore().unwrap() // Load the ignore list normally
+    } else {
+        HashSet::new() // Create an empty HashSet if ignore is false
+    };
 
     // Shared filelist using Arc and Mutex for thread-safe access
     let filelist = Arc::new(Mutex::new(Vec::new()));
@@ -101,7 +105,7 @@ pub fn scanfiles_and_ignoremt(realpath: &str) -> Vec<String> {
 
                         if metta.is_dir() {
                             // Recurse into subdirectories in a separate thread
-                            let sublist = scanfiles_and_ignoremt(&path.path().to_string_lossy());
+                            let sublist = scanfiles_and_ignoremt(&path.path().to_string_lossy(),ignorefiles);
                             let mut filelist_lock = filelist.lock().unwrap();
                             filelist_lock.extend(sublist);
                         } else if metta.is_file() {
@@ -396,6 +400,28 @@ pub fn compressfile(inputfile:&str,outputfile:&str) -> std::io::Result<()> {
     Ok(())
 }
 
+pub fn find_full_hash(partial_hash: &str) -> Result<String, io::Error> {
+    if partial_hash.len() < 7 {
+        eprintln!("{}","Partial hash must be at least 7 characters long".red());
+        return Err(io::Error::new(io::ErrorKind::InvalidInput, "Partial hash must be at least 7 characters long"));
+    }
+
+    // Retrieve all object files from the directory
+    let object_files = scanfiles_and_ignoremt("./.litt/objects/",false);
+    //println!("{:#?}",object_files);
+    // Search for a file whose name starts with the partial hash
+    for file_path in object_files {
+        if let Some(file_name) = file_path.split('/').last() {
+            if file_name.starts_with(partial_hash) {
+                return Ok(file_name.to_string());
+            }
+        }
+    }
+
+    // If no match is found, return an error
+    eprintln!("{}","No matching hash found please enter a valid hash for a commit".red());
+    Err(io::Error::new(io::ErrorKind::NotFound, "No matching hash found"))
+}
 
 pub fn normalize_path(file_path: &str) -> PathBuf {
     // If the path is relative, convert it to an absolute path
