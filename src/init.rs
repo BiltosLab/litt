@@ -17,7 +17,9 @@ pub fn init() {
         "  checksum = true".to_string(),
         "  sha1 = 1ef0972eb948e6229240668effcb9c600fe5888d".to_string(),
     ];
-
+    let head: Vec<String> = vec![ // Some random Index to get it going
+    "master".to_string(),
+];
 
     let filestruct = ["./.litt","./.litt/branches","./.litt/hooks","./.litt/info","./.litt/refs","./.litt/refs/heads","./.litt/refs/tags","./.litt/objects","./.litt/objects/pack","./.litt/objects/info",]; // we can add whatever folders we need to create at init time.
     let files = ["./.litt/info/exclude","./.litt/description","./.litt/HEAD","./.littignore","./.litt/index"];
@@ -31,6 +33,7 @@ pub fn init() {
         touch(file);
     }
     stringtofile("./.litt/index", lines).expect("Index Panic");
+    stringtofile("./.litt/HEAD",head ).expect("HEAD Corruption");
 }
 
 

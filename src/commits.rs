@@ -83,7 +83,8 @@ fn commit_object(message:&str,first:bool,sha_root:String){
     let author = "Laith Shishani"; // we will change this to fetch from a config file but just a test for now
     let email = "mrlaith44@gmail.com"; // we will change this to fetch from a config file but just a test for now
     let mut commit:Vec<String> = Vec::new();
-    let current_branch = "master";
+    let current_branch = &filetostring("./.litt/HEAD").unwrap_or_default()[0];
+    
     commit.push(format!("tree <{}>",sha_root));
     if !first{
         let prev_commit_hash = filetostring(format!("./.litt/refs/heads/{}", current_branch).as_str()).unwrap();
