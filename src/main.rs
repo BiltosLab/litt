@@ -88,6 +88,7 @@ fn status() -> Result<(), io::Error> {
 
 
 
+
 fn helpcom() {
     println!("Litt Usage:\nlitt <first arg> <second arg> <third arg>\nEX: litt add . OR litt add file1.c file2.c\n");
 }

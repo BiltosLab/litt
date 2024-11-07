@@ -1,4 +1,5 @@
 use crate::fileops::{blob, compress_files_in_parallel};
+use crate::scan_for_staging;
 use crate::{file_exists, fileops::scanfiles_and_ignoremt};
 use colored::Colorize;
 use std::borrow::Borrow;
@@ -9,9 +10,15 @@ pub fn add(args:Vec<String>) {
         return;
     }
     if args[0] == "." {
-        let file_list = scanfiles_and_ignoremt(".",true);
+        // let file_list = scanfiles_and_ignoremt(".",true);
+        let (file_list,hashmp) = scan_for_staging(".",true);
+        if !file_list.is_empty(){
+            let _result= compress_files_in_parallel(file_list,hashmp).expect("TODO: panic staging.rs L16");
+        }
+        else {
+            println!("{}","No changes to add to staging area".bright_cyan());
+        }
         // We need to change this to only compress/add to staging modified files ONLY.
-        let result = compress_files_in_parallel(file_list).expect("TODO: panic staging.rs L12");
 
 
     }
