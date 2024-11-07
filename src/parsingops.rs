@@ -260,11 +260,11 @@ fn indexchecksumparser(checksumh:Vec<String>) -> Result<IndexChecksum, ParseErro
 pub fn insert_new_index_entries(newentries: Vec<IndexEntry>, map: HashMap<String, String>) {
   let (mut indexheader, mut entries, mut indexchecksum) = index_parser();
   let mut diff_entries: Vec<IndexEntry> = vec![];
-  if newentries.len() != map.len() {
-      eprintln!("{}","BUGGED: Unequal length of new entries and map".red());
-      eprintln!("New entries length: {}, Map length: {}", newentries.len(), map.len());
-      exit(1);
-  }
+  // if newentries.len() != map.len() {
+  //     eprintln!("{}","BUGGED: Unequal length of new entries and map".red());
+  //     eprintln!("New entries length: {}, Map length: {}", newentries.len(), map.len());
+  //     exit(1);
+  // }
 
   if entries.is_empty() {
       entries.extend(newentries);
@@ -301,7 +301,7 @@ pub fn insert_new_index_entries(newentries: Vec<IndexEntry>, map: HashMap<String
   }
 
   // DEBUG
-  println!("Entries before deletion: {:#?}", entries);
+  // println!("Entries before deletion: {:#?}", entries);
 
   
   entries.retain(|entry| {

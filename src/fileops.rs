@@ -3,7 +3,6 @@ use flate2::write::DeflateEncoder;
 use flate2::Compression;
 use sha2::{Digest, Sha256};
 use std::collections::{HashMap, HashSet};
-use std::fs::canonicalize;
 #[cfg(target_os = "windows")]
 use std::os::windows::fs::MetadataExt;
 use std::path::MAIN_SEPARATOR;
@@ -444,7 +443,7 @@ pub fn compress_files_in_parallel(file_paths: Vec<String>,final_hash_map:HashMap
     //     println!("HASHMAP {:#?}", i);
     //     temp_vec.push(format!("{:#?}", i));
     // }
-
+    // TEMP COMMENT
     // let _ = stringtofile("FILEDEBUG.txt", temp_vec);
 
     insert_new_index_entries(final_file_info_vec.clone(), final_hash_map.clone());
@@ -511,10 +510,6 @@ pub fn compressfile(inputfile: &str, outputfile: &str) -> std::io::Result<()> {
 
 pub fn find_full_hash(partial_hash: &str) -> Result<String, io::Error> {
     if partial_hash.len() < 7 {
-        eprintln!(
-            "{}",
-            "Partial hash must be at least 7 characters long".red()
-        );
         return Err(io::Error::new(
             io::ErrorKind::InvalidInput,
             "Partial hash must be at least 7 characters long",

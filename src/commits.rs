@@ -1,3 +1,4 @@
+use core::hash;
 use std::{collections::{HashMap, HashSet}, fs, path::PathBuf, process::exit, time::{SystemTime, UNIX_EPOCH}, vec};
 use colored::Colorize;
 use chrono::offset::Local;
@@ -128,19 +129,26 @@ Initial commit
 // Extract the commit to a folder for now
 pub fn checkout_commit(phash:String) {
     // let head = filetostring("./.litt/refs/heads/master").unwrap();
-    let hash = find_full_hash(&phash).unwrap_or_default();
-    println!("{}",hash.red());
+    match find_full_hash(&phash) {
+        Ok(hash)=> {
+            println!("{}",hash.bright_cyan());
+            let data = parse_commit_data(hash).unwrap_or_default();
+            let root_tree_hash = data.get("tree").unwrap().to_string();
+            // let parent = data.get("parent").map(|s| s.to_string()).unwrap_or(String::from(""));
+            // let first_commit = data.contains_key("parent");
+        
+            let root_path = PathBuf::from("./COMMIT");
+            let _ = fs::create_dir_all(&root_path); 
+        
+            // Begin recursive tree walking
+            treewalker(root_tree_hash, root_path);
+        }
+        Err(e) => {
+            eprintln!("{}",e.to_string().red());
+        },
+    }
+   
 
-    let data = parse_commit_data(hash).unwrap_or_default();
-    let root_tree_hash = data.get("tree").unwrap().to_string();
-    // let parent = data.get("parent").map(|s| s.to_string()).unwrap_or(String::from(""));
-    // let first_commit = data.contains_key("parent");
-
-    let root_path = PathBuf::from("./COMMIT");
-    let _ = fs::create_dir_all(&root_path); 
-
-    // Begin recursive tree walking
-    treewalker(root_tree_hash, root_path);
 }
 
 fn treewalker(tree_hash: String, current_path: PathBuf) {
