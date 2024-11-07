@@ -75,7 +75,14 @@ fn status() -> Result<(), io::Error> {
     // let linediff = diff::find_diff_lines(original_lines, modified_lines);
     // println!("Modified Lines Test:\n{}", linediff.join("\n"));
     
-    
+    let a =scan_for_staging(".",true);
+    println!("{:#?}",a);
+
+    // let a = scanfiles_and_ignoremt(".", true);
+
+    // for i in a {
+    //     println!("{:#?},{:#?}",i,computehashmt(&i).unwrap());
+    // }
     Ok(())
 }
 

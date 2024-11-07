@@ -3,6 +3,7 @@ use flate2::write::DeflateEncoder;
 use flate2::Compression;
 use sha2::{Digest, Sha256};
 use std::collections::{HashMap, HashSet};
+use std::fs::canonicalize;
 use std::path::MAIN_SEPARATOR;
 use std::sync::{Arc, Mutex};
 use std::thread;
@@ -14,7 +15,7 @@ use std::os::windows::fs::MetadataExt;
 #[cfg(not(target_os = "windows"))]
 use std::os::unix::fs::MetadataExt;
 use colored::Colorize;
-use crate::parsingops::insert_new_index_entries;
+use crate::parsingops::{index_parser, insert_new_index_entries};
 
 use crate::parsingops::IndexEntry;
 
@@ -131,6 +132,103 @@ pub fn scanfiles_and_ignoremt(realpath: &str,ignorefiles:bool) -> Vec<String> {
     //let _ = stringtofile("DEBUGSCANMT.txt",filelist.clone());
     filelist
 }
+
+pub fn scan_for_staging(realpath: &str, ignorefiles: bool) -> Vec<String> {
+    // Get the ignore list
+    let ignore: HashSet<String> = if ignorefiles {
+        littignore().unwrap() // Load the ignore list normally
+    } else {
+        HashSet::new() // Create an empty HashSet if ignore is false
+    };
+
+    // Parse the index to retrieve the existing index entries
+    let (_header, index_entries, _checksum) = index_parser();
+
+    // Convert index_entries to a HashMap for quick lookups by file name
+    let index_map: HashMap<String, String> = index_entries
+        .into_iter()
+        .map(|entry| (entry.name, entry.sha))
+        .collect();
+
+    // Shared filelist using Arc and Mutex for thread-safe access
+    let filelist = Arc::new(Mutex::new(Vec::new()));
+
+    // Vector to hold thread handles
+    let mut handles = vec![];
+
+    // Check the directory
+    if let Ok(dirf) = fs::read_dir(realpath) {
+        for path in dirf {
+            if let Ok(path) = path {
+                let filelist = Arc::clone(&filelist);
+                let ignore = ignore.clone();
+                let index_map = index_map.clone();
+
+                let handle = thread::spawn(move || {
+                    if let Ok(metta) = path.metadata() {
+                        // Get the normalized absolute path
+                        let path_str = path.path().to_str().unwrap().to_string();
+
+                        // Skip if the path is in the ignore list
+                        if ignore.iter().any(|ignore_path| path_str.contains(ignore_path)) {
+                            return;
+                        }
+
+                        if metta.is_dir() {
+                            // Recurse into subdirectories in a separate thread
+                            let sublist = scan_for_staging(&path.path().to_string_lossy(), ignorefiles);
+                            let mut filelist_lock = filelist.lock().unwrap();
+                            filelist_lock.extend(sublist);
+                        } else if metta.is_file() {
+                            // Compute the file's hash
+                            // let file_hash = match computehashmt(&path_str) {
+                            //     Ok(hash) => hash,
+                            //     Err(e) => {
+                            //         eprintln!("Error computing hash for file {}: {}", path_str, e);
+                            //         return;
+                            //     }
+                            // };
+                            let file_hash = computehashmt(&path_str).unwrap();
+                            // Debug print for path and hash
+                            println!("Checking file: {}", path_str);
+                            println!("Computed hash: {}", file_hash);
+
+                            // Check if the file is in index_map and if its hash matches
+                            let should_add = match index_map.get(&path_str) {
+                                Some(existing_hash) => {
+                                    println!("Found in index with hash: {}", existing_hash);
+                                    existing_hash != &file_hash // Add if hashes differ
+                                },
+                                None => true, // Add if not in index
+                            };
+
+                            // Debug print for the decision to add or not
+                            println!("Should add: {}", should_add);
+
+                            // Add file to filelist if necessary
+                            if should_add {
+                                let mut filelist_lock = filelist.lock().unwrap();
+                                filelist_lock.push(path_str);
+                            }
+                        }
+                    }
+                });
+
+                handles.push(handle);
+            }
+        }
+    }
+
+    // Wait for all threads to finish
+    for handle in handles {
+        handle.join().unwrap();
+    }
+
+    // Return the final list of files
+    let filelist = Arc::try_unwrap(filelist).unwrap().into_inner().unwrap();
+    filelist
+}
+
 
 pub fn scan_objects(hash:&str) -> String {
     if let Ok(dirf) = fs::read_dir("./.litt/objects")

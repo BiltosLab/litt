@@ -9,12 +9,9 @@ pub fn add(args:Vec<String>) {
         return;
     }
     if args[0] == "." {
-        let result = compress_files_in_parallel(scanfiles_and_ignoremt(".",true)).expect("TODO: panic staging.rs L12");
-        //79084877629677394630c63b1af455110ce8e9180670217dbeb1071482800736
-        // for i in result {
-        //     println!("{} This is HashMap 0 - -",i.0);
-        //     println!("{} This is HashMap 1 - -",i.1);
-        // }
+        let file_list = scanfiles_and_ignoremt(".",true);
+        // We need to change this to only compress/add to staging modified files ONLY.
+        let result = compress_files_in_parallel(file_list).expect("TODO: panic staging.rs L12");
 
 
     }

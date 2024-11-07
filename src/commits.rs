@@ -1,4 +1,4 @@
-use std::{collections::{HashMap, HashSet}, fs, path::PathBuf, time::{SystemTime, UNIX_EPOCH}, vec};
+use std::{collections::{HashMap, HashSet}, fs, path::PathBuf, process::exit, time::{SystemTime, UNIX_EPOCH}, vec};
 use colored::Colorize;
 use chrono::offset::Local;
 use crate::{
@@ -18,6 +18,11 @@ pub fn commit(option:&str,message:&str) {
     let mut root_tree_object: Vec<String> = vec![];
     let mut added_dirs: HashSet<String> = HashSet::new();
     let first = fileops::file_exists("./.litt/refs/heads/master");
+    if message.is_empty(){
+        eprintln!("{}","Empty commit message".red());
+        return;
+    }
+
     for entry in &indexentries {
         let splittedpath = split_path(&entry.name);
         let hash = &entry.sha;
@@ -84,7 +89,10 @@ fn commit_object(message:&str,first:bool,sha_root:String){
     let email = "mrlaith44@gmail.com"; // we will change this to fetch from a config file but just a test for now
     let mut commit:Vec<String> = Vec::new();
     let current_branch = &filetostring("./.litt/HEAD").unwrap_or_default()[0];
-    
+
+
+
+
     commit.push(format!("tree <{}>",sha_root));
     if !first{
         let prev_commit_hash = filetostring(format!("./.litt/refs/heads/{}", current_branch).as_str()).unwrap();
@@ -228,3 +236,5 @@ fn parse_tree_object(hash:String) -> Vec<Treeobj> {
 
     entries
 }
+
+
