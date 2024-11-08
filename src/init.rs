@@ -30,6 +30,7 @@ pub fn init() {
         mkdir(dir);
     }
     for file in files{
+        if file_exists("./.littignore"){continue;}
         touch(file);
     }
     stringtofile("./.litt/index", lines).expect("Index Panic");

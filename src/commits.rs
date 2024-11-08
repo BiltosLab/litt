@@ -1,7 +1,5 @@
 use crate::{
-    fileops::{self, compute_vec_hash, split_path, stringtofile},
-    filetostring, find_full_hash,
-    parsingops::{self, index_parser, IndexEntry},
+    diff, file_exists, fileops::{self, compute_vec_hash, split_path, stringtofile}, filetostring, find_full_hash, parsingops::{self, index_parser, IndexEntry}
 };
 use chrono::offset::Local;
 use colored::Colorize;
@@ -22,19 +20,20 @@ struct Treeobj {
 }
 
 pub fn commit(option: &str, message: &str) {
-    if compare_commit_to_staging().1{
-        println!("no changes added to commit (use \"litt add\") ");
-        return;
-    }
+    
     let (_index, indexentries, _indcheck) = parsingops::index_parser();
     let mut root_tree_object: Vec<String> = vec![];
     let mut added_dirs: HashSet<String> = HashSet::new();
     let first = fileops::file_exists("./.litt/refs/heads/master");
+    let cmp = compare_commit_to_staging();
     if message.is_empty() {
         eprintln!("{}", "Empty commit message".red());
         return;
     }
-
+    if cmp.1{
+        println!("no changes added to commit (use \"litt add\") ");
+        return;
+    }
     for entry in &indexentries {
         let splittedpath = split_path(&entry.name);
         let hash = &entry.sha;
@@ -290,42 +289,69 @@ fn commit_walker(tree_hash: String, checkout_ext_path: PathBuf) -> HashMap<Strin
     hashedmap
 }
 
+
+// such a terriably written function oh god.. , will be replaced later on.
 // no diffs between staging and last commit == true
-pub fn compare_commit_to_staging() -> (Vec<String>,bool) {
-    let mut diffs:Vec<String> = Vec::new();
-    let hash = filetostring("./.litt/refs/heads/master").unwrap_or_default()[0].clone();
+pub fn compare_commit_to_staging() -> (Vec<String>, bool) {
+    let head: Vec<String> = if file_exists("./.litt/HEAD") {
+        filetostring("./.litt/HEAD").unwrap_or_default()
+    } else {
+        Vec::new()
+    };
+    let mut diffs: Vec<String> = Vec::new();
+    if head.is_empty() {
+        eprintln!("HEAD MISSING?");
+        exit(1);
+    }
+
+    if !file_exists(&format!("./.litt/refs/heads/{}", head[0])) {
+        return (diffs, false);
+    }
+    let hashfile = filetostring(&format!("./.litt/refs/heads/{}", head[0])).unwrap_or_default().clone();
+    let hash = if !hashfile.is_empty() { hashfile[0].clone() } else { "".to_string() };
     println!("{}", hash.bright_cyan());
     let data = parse_commit_data(hash).unwrap_or_default();
     let root_tree_hash = data.get("tree").unwrap().to_string();
     let root_path = PathBuf::from("./");
-    let trees = commit_walker(root_tree_hash, root_path);
+
+    // Adjust `commit_walker` to produce a map of file paths to hashes
+    let mut trees = commit_walker(root_tree_hash, root_path)
+        .into_iter()
+        .map(|(hash, path)| (path, hash))
+        .collect::<HashMap<String, String>>();
+
     // DEBUG
     println!("Pretty print {:#?}", trees);
 
     let entriesa = index_parser();
-    let entries = entriesa.1;
-    if entries.is_empty() {
-        // DEBUG
+    let index_map: HashMap<String, String> = entriesa.1
+        .into_iter()
+        .map(|entry| (entry.name, entry.sha))
+        .collect();
 
-        println!("Index Empty");
-        return (diffs,false);
+    if index_map.is_empty() {
+        return (diffs, false);
     }
-    let mut count: usize = 0;
-    for i in &entries {
-        if trees.contains_key(&i.sha) {
-            count += 1;
-        } else {
-            // DEBUG
 
-            // println!("diff found {}", &i.name);
-            diffs.push(i.name.clone());
-            continue;
+    for (path, hash) in &index_map {
+        let should_add = match trees.get(path) {
+            Some(existing_hash) => {
+                println!("Found in index with hash: {}", existing_hash);
+                existing_hash != hash // Add if hashes differ
+            }
+            None => true, // Add if not in index
+        };
+
+        if should_add {
+            diffs.push(path.clone());
+            println!("DIFF {}", path.clone());
         }
     }
 
-    if entries.len() == count {
-        return (diffs,true);
+    if diffs.is_empty() {
+        println!("NO DIFFS SHOULD NOT COMMIT?");
+        return (diffs, true);
     } else {
-        return (diffs,false);
+        return (diffs, false);
     }
 }
