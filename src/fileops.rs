@@ -203,8 +203,8 @@ pub fn scan_for_staging(realpath: &str, ignorefiles: bool) -> (Vec<String>, Hash
                             };
 
                             // Debug print for path and hash
-                            println!("Checking file: {}", path_str);
-                            println!("Computed hash: {}", file_hash);
+                            // println!("Checking file: {}", path_str);
+                            // println!("Computed hash: {}", file_hash);
 
                             // Store the <file_hash, path_str> in file_hash_map
                             let mut file_hash_map_lock = file_hash_map.lock().unwrap();
@@ -213,14 +213,14 @@ pub fn scan_for_staging(realpath: &str, ignorefiles: bool) -> (Vec<String>, Hash
                             // Check if the file is in index_map and if its hash matches
                             let should_add = match index_map.get(&path_str) {
                                 Some(existing_hash) => {
-                                    println!("Found in index with hash: {}", existing_hash);
+                                    // println!("Found in index with hash: {}", existing_hash);
                                     existing_hash != &file_hash // Add if hashes differ
                                 },
                                 None => true, // Add if not in index
                             };
 
                             // Debug print for the decision to add or not
-                            println!("Should add: {}", should_add);
+                            // println!("Should add: {}", should_add);
 
                             // Add file to filelist if necessary
                             if should_add {

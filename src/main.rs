@@ -69,26 +69,55 @@ fn main() -> Result<(), io::Error> {
 }
 
 fn status() -> Result<(), io::Error> {
-    //template for status func
-    // let original_lines = filetostring("./src/main.rs")?; // Just a note here : This original lines Vec<String> will get fetched from the database file using the commit number and our current files will get compared to it
-    // let modified_lines = filetostring("./src/main1.rs")?; //adbasdds
-    // let linediff = diff::find_diff_lines(original_lines, modified_lines);
-    // println!("Modified Lines Test:\n{}", linediff.join("\n"));
-    
     let a =scan_for_staging(".",true);
-    println!("{:#?}",a);
 
-    // let a = scanfiles_and_ignoremt(".", true);
 
-    // for i in a {
-    //     println!("{:#?},{:#?}",i,computehashmt(&i).unwrap());
-    // }
+
+    if a.0.is_empty(){
+        println!("EMPTY");
+        return Ok(());
+    }
+    else {
+        let head: Vec<String> = if file_exists("./.litt/HEAD") {filetostring("./.litt/HEAD").unwrap_or_default()} else {Vec::new()};
+        if !head.is_empty(){
+            println!("On branch {}",head[0]);
+            println!("Changes not staged for commit:\n  (use \"litt add <file>...\" to update what will be committed)");
+            for i in a.0{
+                println!("{}",format!("\tmodified:  {}",i).red());
+            }
+        }
+            println!("no changes added to commit (use \"litt add\")");
+    }
     Ok(())
 }
 
 
+// git status
+// On branch master
+// Your branch is up to date with 'origin/master'.
 
+// Changes not staged for commit:
+//   (use "git add <file>..." to update what will be committed)
+//   (use "git restore <file>..." to discard changes in working directory)
+//         modified:   src/fileops.rs
+//         modified:   src/main.rs
+
+
+// On branch master
+// Your branch is up to date with 'origin/master'.
+
+// Changes to be committed:
+//   (use "git restore --staged <file>..." to unstage)
+//         modified:   src/fileops.rs
+//         modified:   src/main.rs
 
 fn helpcom() {
     println!("Litt Usage:\nlitt <first arg> <second arg> <third arg>\nEX: litt add . OR litt add file1.c file2.c\n");
 }
+
+
+    //template for diff func test
+    // let original_lines = filetostring("./src/main.rs")?; // Just a note here : This original lines Vec<String> will get fetched from the database file using the commit number and our current files will get compared to it
+    // let modified_lines = filetostring("./src/main1.rs")?; //adbasdds
+    // let linediff = diff::find_diff_lines(original_lines, modified_lines);
+    // println!("Modified Lines Test:\n{}", linediff.join("\n"));
