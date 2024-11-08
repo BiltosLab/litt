@@ -1,5 +1,6 @@
 use crate::{fileops::*};
 use colored::*;
+use commits::compare_commit_to_staging;
 use std::{env, fs, io, process::exit};
 mod commits;
 mod diff;
@@ -69,25 +70,36 @@ fn main() -> Result<(), io::Error> {
 }
 
 fn status() -> Result<(), io::Error> {
+    let cmp = compare_commit_to_staging();
+
     let a =scan_for_staging(".",true);
 
 
-
-    if a.0.is_empty(){
-        println!("EMPTY");
-        return Ok(());
-    }
-    else {
-        let head: Vec<String> = if file_exists("./.litt/HEAD") {filetostring("./.litt/HEAD").unwrap_or_default()} else {Vec::new()};
+    let head: Vec<String> = if file_exists("./.litt/HEAD") {filetostring("./.litt/HEAD").unwrap_or_default()} else {Vec::new()};
+    println!("On branch {}",head[0]);
+    if !&cmp.0.is_empty(){
+        println!("Changes to be committed:\n  (use \"litt commit ...\" to commit)");
         if !head.is_empty(){
-            println!("On branch {}",head[0]);
-            println!("Changes not staged for commit:\n  (use \"litt add <file>...\" to update what will be committed)");
-            for i in a.0{
-                println!("{}",format!("\tmodified:  {}",i).red());
+            for i in &cmp.0{
+                println!("{}",format!("\tmodified:  {}",i).green());
             }
         }
             println!("no changes added to commit (use \"litt add\")");
     }
+    if !&a.0.is_empty() {
+            println!("Changes not staged for commit:\n  (use \"litt add <file>...\" to update what will be committed)");
+            if !head.is_empty(){
+                for i in &a.0{
+                    println!("{}",format!("\tmodified:  {}",i).red());
+                }
+            }
+                println!("no changes added to commit (use \"litt add\")");
+        
+    }
+    if a.0.is_empty() && cmp.0.is_empty() {
+        println!("\n\nnothing to commit, working tree clean");
+    }
+    // let a = compare_commit_to_staging();
     Ok(())
 }
 
