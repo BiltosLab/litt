@@ -1,4 +1,5 @@
 use crate::{fileops::*};
+use branch::{create_new_branch, get_branch, get_heads};
 use colored::*;
 use commits::compare_commit_to_staging;
 use std::{env, fs, io, process::exit};
@@ -9,6 +10,7 @@ mod init;
 mod parsingops;
 mod staging;
 mod log;
+mod branch;
 // figure out how to use env variables to store email,name of the commiter much easier than the other one i was thinking about
 // which was create a file in .config/litt and store info there idk tbh
 fn main() -> Result<(), io::Error> {
@@ -61,6 +63,22 @@ fn main() -> Result<(), io::Error> {
             }
             let partial_hash = args[2].clone();
             commits::checkout_commit(partial_hash);
+        },
+        "branch" => {
+            if args.len() < 3 {
+                println!("len = {}",args.len());
+                for i in get_heads(){
+                    if i == get_branch().0{
+                        println!(" * {}",i.green());
+                    }
+                    else {
+                        println!("   {}",i);
+                    }
+                }
+            }
+            else if args.len() == 3 {
+                create_new_branch(args[2].clone());
+            }
         }
         _ => println!("Unknown command: {}", cmd),
     }
@@ -75,24 +93,24 @@ fn status() -> Result<(), io::Error> {
     let a =scan_for_staging(".",true);
 
 
-    let head: Vec<String> = if file_exists("./.litt/HEAD") {filetostring("./.litt/HEAD").unwrap_or_default()} else {Vec::new()};
-    println!("On branch {}",head[0]);
+    let head:String = get_branch().0;
+    println!("On branch {}",head);
     if !&cmp.0.is_empty(){
         println!("Changes to be committed:\n  (use \"litt commit ...\" to commit)");
-        if !head.is_empty(){
+        // if !head.is_empty(){
             for i in &cmp.0{
                 println!("{}",format!("\tmodified:  {}",i).green());
             }
-        }
+        // }
             println!("no changes added to commit (use \"litt add\")");
     }
     if !&a.0.is_empty() {
             println!("Changes not staged for commit:\n  (use \"litt add <file>...\" to update what will be committed)");
-            if !head.is_empty(){
+            // if !head.is_empty(){
                 for i in &a.0{
                     println!("{}",format!("\tmodified:  {}",i).red());
                 }
-            }
+            // }
                 println!("no changes added to commit (use \"litt add\")");
         
     }

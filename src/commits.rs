@@ -1,5 +1,5 @@
 use crate::{
-    diff, file_exists, fileops::{self, compute_vec_hash, split_path, stringtofile}, filetostring, find_full_hash, parsingops::{self, index_parser, IndexEntry}
+    branch::get_branch, diff, file_exists, fileops::{self, compute_vec_hash, split_path, stringtofile}, filetostring, find_full_hash, parsingops::{self, index_parser, IndexEntry}
 };
 use chrono::offset::Local;
 use colored::Colorize;
@@ -109,7 +109,7 @@ fn commit_object(message: &str, first: bool, sha_root: String) {
     let author = "Laith Shishani"; // we will change this to fetch from a config file but just a test for now
     let email = "mrlaith44@gmail.com"; // we will change this to fetch from a config file but just a test for now
     let mut commit: Vec<String> = Vec::new();
-    let current_branch = &filetostring("./.litt/HEAD").unwrap_or_default()[0];
+    let current_branch = get_branch().0;
 
     commit.push(format!("tree <{}>", sha_root));
     if !first {
@@ -151,7 +151,6 @@ Initial commit
 
 // Extract the commit to a folder for now
 pub fn checkout_commit(phash: String) {
-    // let head = filetostring("./.litt/refs/heads/master").unwrap();
     match find_full_hash(&phash) {
         Ok(hash) => {
             println!("{}", hash.bright_cyan());
@@ -160,7 +159,7 @@ pub fn checkout_commit(phash: String) {
             // let parent = data.get("parent").map(|s| s.to_string()).unwrap_or(String::from(""));
             // let first_commit = data.contains_key("parent");
 
-            let root_path = PathBuf::from("./COMMIT");
+            let root_path = PathBuf::from("./COMMIT"); // This is temp in real prod use should be "./" i just dont wanna ruin my own repo even tho its prob fine and should work like git rn on a basic level
             let _ = fs::create_dir_all(&root_path);
 
             // Begin recursive tree walking
@@ -293,21 +292,22 @@ fn commit_walker(tree_hash: String, checkout_ext_path: PathBuf) -> HashMap<Strin
 // such a terriably written function oh god.. , will be replaced later on.
 // no diffs between staging and last commit == true
 pub fn compare_commit_to_staging() -> (Vec<String>, bool) {
-    let head: Vec<String> = if file_exists("./.litt/HEAD") {
-        filetostring("./.litt/HEAD").unwrap_or_default()
-    } else {
-        Vec::new()
-    };
+    let head = get_branch().0;
+    // let head: Vec<String> = if file_exists("./.litt/HEAD") {
+    //     filetostring("./.litt/HEAD").unwrap_or_default()
+    // } else {
+    //     Vec::new()
+    // };
     let mut diffs: Vec<String> = Vec::new();
-    if head.is_empty() {
-        eprintln!("HEAD MISSING?");
-        exit(1);
-    }
+    // if head.is_empty() {
+    //     eprintln!("HEAD MISSING?");
+    //     exit(1);
+    // }
 
-    if !file_exists(&format!("./.litt/refs/heads/{}", head[0])) {
+    if !file_exists(&format!("./.litt/refs/heads/{}", head)) {
         return (diffs, false);
     }
-    let hashfile = filetostring(&format!("./.litt/refs/heads/{}", head[0])).unwrap_or_default().clone();
+    let hashfile = filetostring(&format!("./.litt/refs/heads/{}", head)).unwrap_or_default().clone();
     let hash = if !hashfile.is_empty() { hashfile[0].clone() } else { "".to_string() };
     println!("{}", hash.bright_cyan());
     let data = parse_commit_data(hash).unwrap_or_default();
@@ -354,4 +354,13 @@ pub fn compare_commit_to_staging() -> (Vec<String>, bool) {
     } else {
         return (diffs, false);
     }
+}
+
+
+
+pub fn get_current_commit()-> String{
+    let head = get_branch();
+    if head.1{eprintln!("{}","No commits yet.".red()); exit(1);}
+    let hashfile = filetostring(&format!("./.litt/refs/heads/{}", head.0)).unwrap_or_default();
+    return hashfile[0].clone();
 }
