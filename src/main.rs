@@ -123,30 +123,11 @@ fn status() -> Result<(), io::Error> {
 }
 
 
-// git status
-// On branch master
-// Your branch is up to date with 'origin/master'.
-
-// Changes not staged for commit:
-//   (use "git add <file>..." to update what will be committed)
-//   (use "git restore <file>..." to discard changes in working directory)
-//         modified:   src/fileops.rs
-//         modified:   src/main.rs
-
-
-// On branch master
-// Your branch is up to date with 'origin/master'.
-
-// Changes to be committed:
-//   (use "git restore --staged <file>..." to unstage)
-//         modified:   src/fileops.rs
-//         modified:   src/main.rs
-
-
 fn checkout(target:String){
     if file_exists(&format!("./.litt/refs/heads/{}",target))
     {
         checkout_branch(target);
+
     }
     else {
         let partial_hash = target;
@@ -158,14 +139,3 @@ fn checkout(target:String){
 fn helpcom() {
     println!("Litt Usage:\nlitt <first arg> <second arg> <third arg>\nEX: litt add . OR litt add file1.c file2.c\n");
 }
-
-
-    //template for diff func test
-    // let original_lines = filetostring("./src/main.rs")?; // Just a note here : This original lines Vec<String> will get fetched from the database file using the commit number and our current files will get compared to it
-    // let modified_lines = filetostring("./src/main1.rs")?; //adbasdds
-    // let linediff = diff::find_diff_lines(original_lines, modified_lines);
-    // println!("Modified Lines Test:\n{}", linediff.join("\n"));
-
-
-
-    // mod
