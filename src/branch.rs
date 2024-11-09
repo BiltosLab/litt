@@ -2,7 +2,7 @@ use std::process::exit;
 
 use colored::Colorize;
 
-use crate::{commits::get_current_commit, file_exists, filetostring, scanfiles_and_ignoremt, stringtofile};
+use crate::{commits::{checkout_commit, get_current_commit}, file_exists, filetostring, scanfiles_and_ignoremt, stringtofile};
 
 
 
@@ -42,4 +42,21 @@ pub fn get_heads() -> Vec<String> {
         final_heads.push(i.rsplit('/').next().unwrap().to_string());
     }
     return final_heads;
+}
+
+
+pub fn checkout_branch(name:String){
+    // let heads = get_heads();
+    // if heads.contains(&name){ // i know we checked already but its w.e
+        let hashfile = filetostring(&format!("./.litt/refs/heads/{}", name)).unwrap_or_default();
+
+        checkout_commit(hashfile[0].clone());
+        let bname: Vec<String> = vec![name];
+        let _ = stringtofile("./.litt/HEAD", bname);
+    // }
+    // else {
+    //     eprintln!("branch {} doesnt exist",name.red());
+    //     return;
+    // }
+
 }

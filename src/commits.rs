@@ -1,5 +1,5 @@
 use crate::{
-    branch::get_branch, diff, file_exists, fileops::{self, compute_vec_hash, split_path, stringtofile}, filetostring, find_full_hash, parsingops::{self, index_parser, IndexEntry}
+    branch::{get_branch, get_heads}, diff, file_exists, fileops::{self, compute_vec_hash, split_path, stringtofile}, filetostring, find_full_hash, parsingops::{self, index_parser, IndexEntry}
 };
 use chrono::offset::Local;
 use colored::Colorize;
@@ -24,7 +24,9 @@ pub fn commit(option: &str, message: &str) {
     let (_index, indexentries, _indcheck) = parsingops::index_parser();
     let mut root_tree_object: Vec<String> = vec![];
     let mut added_dirs: HashSet<String> = HashSet::new();
-    let first = fileops::file_exists("./.litt/refs/heads/master");
+    // Refactor
+    // let first = fileops::file_exists("./.litt/refs/heads/master");
+    let first = get_heads().is_empty();
     let cmp = compare_commit_to_staging();
     if message.is_empty() {
         eprintln!("{}", "Empty commit message".red());
@@ -65,7 +67,7 @@ pub fn commit(option: &str, message: &str) {
         root_tree_object,
     );
     println!("TREE OBJ ROOT LOCATED IN {}", root_hash);
-    commit_object(message, !first, root_hash);
+    commit_object(message, first, root_hash);
 }
 
 fn tree_object(dir: &str, entries: &[IndexEntry], added_dirs: &mut HashSet<String>) -> String {

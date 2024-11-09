@@ -1,5 +1,5 @@
 use crate::{fileops::*};
-use branch::{create_new_branch, get_branch, get_heads};
+use branch::{checkout_branch, create_new_branch, get_branch, get_heads};
 use colored::*;
 use commits::compare_commit_to_staging;
 use std::{env, fs, io, process::exit};
@@ -61,8 +61,9 @@ fn main() -> Result<(), io::Error> {
                 println!("ERROR! No commit hash provided for checkout.");
                 exit(1);
             }
-            let partial_hash = args[2].clone();
-            commits::checkout_commit(partial_hash);
+            else if args.len() == 3 {
+                checkout(args[2].clone());
+            }
         },
         "branch" => {
             if args.len() < 3 {
@@ -141,6 +142,19 @@ fn status() -> Result<(), io::Error> {
 //         modified:   src/fileops.rs
 //         modified:   src/main.rs
 
+
+fn checkout(target:String){
+    if file_exists(&format!("./.litt/refs/heads/{}",target))
+    {
+        checkout_branch(target);
+    }
+    else {
+        let partial_hash = target;
+        commits::checkout_commit(partial_hash);
+    }
+}
+
+
 fn helpcom() {
     println!("Litt Usage:\nlitt <first arg> <second arg> <third arg>\nEX: litt add . OR litt add file1.c file2.c\n");
 }
@@ -151,3 +165,7 @@ fn helpcom() {
     // let modified_lines = filetostring("./src/main1.rs")?; //adbasdds
     // let linediff = diff::find_diff_lines(original_lines, modified_lines);
     // println!("Modified Lines Test:\n{}", linediff.join("\n"));
+
+
+
+    // mod
