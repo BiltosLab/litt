@@ -1,9 +1,10 @@
-use std::process::exit;
+use std::{process::exit, time::SystemTime};
 
+use chrono::Local;
 use colored::Colorize;
 
 use crate::{commits::{checkout_commit, get_current_commit}, file_exists, filetostring, scanfiles_and_ignoremt, stringtofile};
-
+use crate::compute_vec_hash;
 
 
 
@@ -60,3 +61,48 @@ pub fn checkout_branch(name:String){
     // }
 
 }
+
+
+
+pub fn merge(){
+    
+}
+
+/* TODO BLOCK
+i think the best way to do a merge and the simplest is when we have a fastforward case which is literally one of the simplest forms of branching then merging
+simply let's assume we're on master then we branch off and continue there, assuimg we havent gone back to master and did a change all we can simply do 
+is create a new merge type of commit where we point the master pointer to the new branches last commit and that will be the head of master.
+*/
+
+pub fn merge_commit(message: &str,master:String,slave:String) {
+    if get_heads().is_empty(){
+        return;
+    }
+    let author = "Laith Shishani"; // we will change this to fetch from a config file but just a test for now
+    let email = "mrlaith44@gmail.com"; // we will change this to fetch from a config file but just a test for now
+    let mut commit: Vec<String> = Vec::new();
+    let current_branch = get_branch().0;
+
+    commit.push(format!("parent <{}>", slave));
+    commit.push(format!("parent <{}>", master));
+
+    commit.push(format!(
+        "author {} <{}> {} {}",
+        author,
+        email,
+        SystemTime::now()
+            .duration_since(SystemTime::UNIX_EPOCH)
+            .expect("Time went backwards?")
+            .as_secs(),
+        Local::now().format("%z")
+    ));
+    commit.push(message.to_string());
+    println!("{:#?}", commit);
+    let hashof = compute_vec_hash(&commit);
+    let _ = stringtofile(format!("./.litt/objects/{}", &hashof).as_str(), commit);
+    let _ = stringtofile(
+        format!("./.litt/refs/heads/{}", current_branch).as_str(),
+        vec![hashof.clone()],
+    );
+
+    println!("Merged successfully! Hash: {}", hashof);}
