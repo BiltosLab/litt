@@ -54,12 +54,6 @@ pub fn commit(option: &str, message: &str) {
             root_tree_object.push(format!("tree {} {}", tree_hash, splittedpath[1]));
         }
     }
-    // Get previous commit if it exists.
-    // let head = filetostring("./.litt/refs/heads/master").unwrap();
-    // let data = parse_commit_data(head[0].clone()).unwrap_or_default();
-    // let root_tree_hash = data.get("tree").unwrap().to_string();
-    // let parent = data.get("parent").map(|s| s.to_string()).unwrap_or(String::from(""));
-    // let first_commit = data.contains_key("parent");
 
     let root_hash = compute_vec_hash(&root_tree_object);
     let _ = stringtofile(
@@ -195,7 +189,7 @@ fn treewalker_checkout(tree_hash: String, checkout_ext_path: PathBuf) {
     }
 }
 
-fn parse_commit_data(hash: String) -> Result<HashMap<String, String>, &'static str> {
+pub fn parse_commit_data(hash: String) -> Result<HashMap<String, String>, &'static str> {
     let mut parsed_data = HashMap::new();
     let lines = filetostring(&format!("./.litt/objects/{}", hash)).unwrap();
     for line in lines {
@@ -244,7 +238,10 @@ fn parse_commit_data(hash: String) -> Result<HashMap<String, String>, &'static s
                 parsed_data.insert("commit_time".to_string(), timestamp.to_string());
                 parsed_data.insert("timezone".to_string(), timezone.to_string());
             }
+        } else if !line.is_empty() {
+            parsed_data.insert("message".to_string(), line);
         }
+        
     }
 
     if parsed_data.is_empty() {

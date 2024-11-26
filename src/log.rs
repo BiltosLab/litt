@@ -1,15 +1,48 @@
-use crate::fileops::*;
+use std::collections::HashMap;
 
+use chrono::{TimeZone, Utc};
+
+use crate::
+    commits::{get_current_commit, parse_commit_data}
+;
 
 pub fn log() {
-    // parsingops::test_indextemp();
-    // println!("IN LOG EXECUTED SUCCESSFULLY!");
+    let mut currcommit = get_current_commit();
+    let mut data = parse_commit_data(currcommit.clone()).unwrap_or_default();
+    if !data.is_empty() {
+        loop {
+            if data.contains_key("parent") {
+                print_commit_info(&currcommit, &data);
+                currcommit = data.get("parent").unwrap().to_string();
+                data = parse_commit_data(currcommit.clone()).unwrap_or_default();
+            }
+            else if data.contains_key("tree") {
+                print_commit_info(&currcommit, &data);
+                break;
+            }
+            else if !data.is_empty() {
+                break;
+            }
+        }
+    } 
+}
 
-    let mut count = 0;
-    let mut a = scanfiles_and_ignoremt(".",true);
-    for i in &mut a {
-        count+=1;
-        println!("{}", i);
+
+fn print_commit_info(currcommit:&String,data:&HashMap<String, String>){
+    {
+        let dateunix: &str = &data.get("commit_time").unwrap();
+        let stamp = dateunix.parse::<i64>().unwrap_or_default();
+
+        // println!("{:#?}", &firstdata);
+        println!("commit {}", currcommit);
+        println!("Author: {} <{}>", &data.get("author_name").unwrap(),&data.get("author_email").unwrap());
+        println!(
+            "Date: {:?} {}\n",
+            Utc.timestamp_opt(stamp, 0).unwrap(),
+            &data.get("timezone").unwrap()
+        );
+        println!("  {}", &data.get("message").unwrap());  
+        println!("\n");
+        
     }
-    println!("Found {} files", count);
 }
