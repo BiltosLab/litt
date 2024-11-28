@@ -144,7 +144,7 @@ fn diff() -> Result<(), io::Error> {
     let index = index_parser().1;
 
     let head:String = get_branch().0;
-    println!("On branch {}",head);
+    // println!("On branch {}",head);
     // if !&cmp.0.is_empty(){
     //     println!("Changes to be committed:\n  (use \"litt commit ...\" to commit)");
     //     // if !head.is_empty(){
@@ -155,7 +155,7 @@ fn diff() -> Result<(), io::Error> {
     //         println!("no changes added to commit (use \"litt add\")");
     // }
     if !&a.0.is_empty() {
-            println!("Changes not staged for commit:\n  (use \"litt add <file>...\" to update what will be committed)");
+            // println!("Changes not staged for commit:\n  (use \"litt add <file>...\" to update what will be committed)");
             // if !head.is_empty(){
                 for i in &a.0{
                     println!("{}",format!("\tmodified:  {}",i).red());
@@ -167,7 +167,7 @@ fn diff() -> Result<(), io::Error> {
                             // for d in diff{
                             //     println!("{}",d);
                             // }
-                            println!("Modified Lines Test:\n{}", diff.join("\n"));
+                            println!("\n{}", diff.join("\n"));
                         }
                     }
                 }
