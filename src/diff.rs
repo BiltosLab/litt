@@ -1,5 +1,7 @@
 use colored::*;
 
+
+// This is not good code, need to rewrite later.
 pub fn find_diff_lines(original_file: Vec<String>, modified_file: Vec<String>) -> Vec<String> { 
     // need to make this give the location of the diff later on
     let mut differences: Vec<String> = Vec::new();
@@ -23,7 +25,7 @@ pub fn find_diff_lines(original_file: Vec<String>, modified_file: Vec<String>) -
             _ => unreachable!(), // This case should not happen due to max_lines
         }
     }
-    println!("Percentage of Similarity ? {:#?}%",similarity_percentage(original_file, modified_file));
+    // println!("Percentage of Similarity ? {:#?}%",similarity_percentage(original_file, modified_file));
     differences
 }
 

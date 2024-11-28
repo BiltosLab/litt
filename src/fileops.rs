@@ -577,3 +577,18 @@ pub fn catfile(hashoffile: &str) {
 pub fn split_path(path: &str) -> Vec<&str> {
     path.split(MAIN_SEPARATOR).collect()
 }
+
+pub fn decompressfile_to_vec(inputfile: &str) -> io::Result<Vec<String>> {
+    let input_file = File::open(inputfile)?;
+    let mut reader = BufReader::new(input_file);
+    let mut decoder = DeflateDecoder::new(&mut reader);
+    let mut decompressed_data = String::new();
+    
+    // Decompress into a string
+    decoder.read_to_string(&mut decompressed_data)?;
+
+    // Split the decompressed data into lines and collect into a Vec<String>
+    let lines: Vec<String> = decompressed_data.lines().map(|line| line.to_string()).collect();
+    
+    Ok(lines)
+}

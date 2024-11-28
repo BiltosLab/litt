@@ -2,6 +2,8 @@ use crate::{fileops::*};
 use branch::{checkout_branch, create_new_branch, get_branch, get_heads};
 use colored::*;
 use commits::compare_commit_to_staging;
+use diff::find_diff_lines;
+use parsingops::index_parser;
 use std::{env, fs, io, process::exit};
 mod commits;
 mod diff;
@@ -46,6 +48,7 @@ fn main() -> Result<(), io::Error> {
             }
         },
         "status" => status()?,
+        "diff" => diff()?,
         "log" => log::log(),
         "cat-file" => {
             if args.len() < 3 {
@@ -134,7 +137,55 @@ fn checkout(target:String){
         commits::checkout_commit(partial_hash);
     }
 }
+fn diff() -> Result<(), io::Error> {
+    let cmp = compare_commit_to_staging();
 
+    let a =scan_for_staging(".",true);
+    let index = index_parser().1;
+
+    let head:String = get_branch().0;
+    println!("On branch {}",head);
+    // if !&cmp.0.is_empty(){
+    //     println!("Changes to be committed:\n  (use \"litt commit ...\" to commit)");
+    //     // if !head.is_empty(){
+    //         for i in &cmp.0{
+    //             println!("{}",format!("\tmodified:  {}",i).green());
+    //         }
+    //     // }
+    //         println!("no changes added to commit (use \"litt add\")");
+    // }
+    if !&a.0.is_empty() {
+            println!("Changes not staged for commit:\n  (use \"litt add <file>...\" to update what will be committed)");
+            // if !head.is_empty(){
+                for i in &a.0{
+                    println!("{}",format!("\tmodified:  {}",i).red());
+                    for j in &index{
+                        if j.name == *i {
+                            let originalfile = decompressfile_to_vec(&format!("./.litt/objects/{}",j.sha)).unwrap_or_default();
+                            let modifiedfile = filetostring(&i).unwrap_or_default();
+                            let diff = find_diff_lines(originalfile,modifiedfile);
+                            // for d in diff{
+                            //     println!("{}",d);
+                            // }
+                            println!("Modified Lines Test:\n{}", diff.join("\n"));
+                        }
+                    }
+                }
+                // for i in &a.1{
+                //     println!("{}",format!("{:#?}",i.0).blue());
+                // }
+                
+                
+            // }
+                println!("no changes added to commit (use \"litt add\")");
+        
+    }
+    if a.0.is_empty() && cmp.0.is_empty() {
+        println!("\n\nnothing to commit, working tree clean");
+    }
+    // let a = compare_commit_to_staging();
+    Ok(())
+}
 
 fn helpcom() {
     println!("Usage: litt <command> [<args>]");
