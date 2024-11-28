@@ -17,7 +17,7 @@ fn main() -> Result<(), io::Error> {
     let args: Vec<String> = env::args().collect();
     if args.len() < 2 {
         helpcom();
-        exit(1);
+        exit(0);
     }
     let cmd = &args[1];
     match cmd.as_str() {
@@ -137,5 +137,25 @@ fn checkout(target:String){
 
 
 fn helpcom() {
-    println!("Litt Usage:\nlitt <first arg> <second arg> <third arg>\nEX: litt add . OR litt add file1.c file2.c\n");
+    println!("Usage: litt <command> [<args>]");
+    println!();
+    println!("Commands:");
+    println!("  init                Initialize a new Litt repository.");
+    println!("  add <path>          Stage files or directories for the next commit.");
+    println!("                      Example: litt add .");
+    println!("  commit -m <message> Create a new commit with a message.");
+    println!("                      Example: litt commit -m \"Initial commit\"");
+    println!("  status              Show the status of tracked and untracked files.");
+    println!("                      Indicates staged changes and differences.");
+    println!("  log                 Display the commit history of the current branch.");
+    println!("  cat-file <hash>     Display the content of an object by its hash.");
+    println!("                      Example: litt cat-file 1bc12ca");
+    println!("  checkout <target>   Switch to a specific commit or branch.");
+    println!("                      Example: litt checkout master");
+    println!("                      Example: litt checkout 1bc12ca");
+    println!("  branch              List all branches with the current branch highlighted.");
+    println!("                      Example: litt branch");
+    println!("  branch <name>       Create a new branch with the specified name.");
+    println!("                      Example: litt branch feature-x");
+    println!();
 }
